@@ -163,6 +163,11 @@ mod tests {
     }
 
     #[test]
+    fn enum_variants() {
+        testvector_verify("files/test-vectors/enum_variants");
+    }
+
+    #[test]
     fn struct_module() {
         testvector_verify("files/test-vectors/struct_module");
     }
@@ -240,11 +245,7 @@ mod tests {
         let mut expected = String::new();
         assert!(expected_file.read_to_string(&mut expected).is_ok());
 
-        let config = Configuration::new(
-            Path::new(testvector), 
-            Path::new("input.idl"), 
-            false
-        );
+        let config = Configuration::new(Path::new(testvector), Path::new("input.idl"), false);
 
         // Create fake "file"
         let mut out = Cursor::new(Vec::new());

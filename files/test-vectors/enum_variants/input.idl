@@ -1,0 +1,1 @@
+enum Foo { VARIANT0, VARIANT1, VARIANT2 };

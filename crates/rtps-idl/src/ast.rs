@@ -2,11 +2,14 @@
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0>
+use minijinja;
 use linked_hash_map::LinkedHashMap;
-use std::{
-    io::{Error, Write},
-    sync::Once,
-};
+use serde_derive::Serialize;
+
+const INDENTION: usize = 4;
+const IMPORT_VEC: &str = "use std::vec::Vec;";
+const ATTR_ALLOW_UNUSED_IMPORTS: &str = "#[allow(unused_imports)]";
+const IMPORT_SERDE: &str = "use serde_derive::{Serialize, Deserialize};";
 
 ///
 #[derive(Clone, Debug)]
@@ -16,24 +19,13 @@ pub enum UnaryOp {
     Inverse,
 }
 
-const INDENTION: usize = 4;
-const ATTR_ALLOW_DEADCODE: &str = "#[allow(dead_code)]";
-const ATTR_DERIVE_SERDE: &str = "#[derive(Serialize, Deserialize)]";
-const ATTR_DERIVE_CLONE_DEBUG: &str = "#[derive(Clone, Debug)]";
-const ATTR_ALLOW_NON_CAMEL_CASE_TYPES: &str = "#[allow(non_camel_case_types)]";
-const ATTR_ALLOW_NON_SNAKE_CASE: &str = "#[allow(non_snake_case)]";
-const IMPORT_SERDE: &str = "use serde_derive::{Serialize, Deserialize};";
-const IMPORT_VEC: &str = "use std::vec::Vec;";
-const ATTR_ALLOW_UNUSED_IMPORTS: &str = "#[allow(unused_imports)]";
-
 impl UnaryOp {
-    pub fn write<W: Write>(&self, out: &mut W) -> Result<(), Error> {
-        let _ = match self {
-            UnaryOp::Neg => write!(out, "-"),
-            UnaryOp::Pos => write!(out, "+"),
-            UnaryOp::Inverse => write!(out, "~"),
-        };
-        Ok(())
+    pub fn to_str(&self) -> &str {
+        match self {
+            UnaryOp::Neg => "-",
+            UnaryOp::Pos => "+",
+            UnaryOp::Inverse => "~",
+        }
     }
 }
 
@@ -52,22 +44,20 @@ pub enum BinaryOp {
     And,
 }
 
-
 impl BinaryOp {
-    pub fn write<W: Write>(&self, out: &mut W) -> Result<(), Error> {
-        let _ = match self {
-            BinaryOp::Add => write!(out, "+"),
-            BinaryOp::Sub => write!(out, "-"),
-            BinaryOp::Mul => write!(out, "*"),
-            BinaryOp::Div => write!(out, "/"),
-            BinaryOp::Mod => write!(out, "%"),
-            BinaryOp::LShift => write!(out, "<<"),
-            BinaryOp::RShift => write!(out, ">>"),
-            BinaryOp::Or => write!(out, "|"),
-            BinaryOp::Xor => write!(out, "^"),
-            BinaryOp::And => write!(out, "&"),
-        };
-        Ok(())
+    pub fn to_str(&self) -> &str {
+        match self {
+            BinaryOp::Add => "+",
+            BinaryOp::Sub => "-",
+            BinaryOp::Mul => "*",
+            BinaryOp::Div => "/",
+            BinaryOp::Mod => "%",
+            BinaryOp::LShift => "<<",
+            BinaryOp::RShift => ">>",
+            BinaryOp::Or => "|",
+            BinaryOp::Xor => "^",
+            BinaryOp::And => "&",
+        }
     }
 }
 
@@ -76,20 +66,23 @@ impl BinaryOp {
 pub struct IdlScopedName(pub Vec<String>, pub bool);
 
 impl IdlScopedName {
-    pub fn write<W: Write>(&self, out: &mut W) -> Result<(), Error> {
+    pub fn to_string(&self) -> String {
         let is_absolute_path = self.1;
         let components = &self.0;
+        let mut ret = String::new();
         for (idx, comp) in components.iter().enumerate() {
             // TODO, use paths according to "crate::" or "super::"
             if idx == 0 && !is_absolute_path {
-                let _ = write!(out, "{}", comp);
+                ret.push_str(comp);
             } else if idx == 0 && is_absolute_path {
-                let _ = write!(out, "crate::{}", comp);
+                let crate_comp = format!("crate::{}", comp);
+                ret.push_str(&crate_comp);
             } else {
-                let _ = write!(out, "::{}", comp);
+                let layer_comp = format!("::{}", comp);
+                ret.push_str(&layer_comp);
             }
         }
-        Ok(())
+        ret
     }
 }
 
@@ -114,35 +107,26 @@ pub enum IdlValueExpr {
 }
 
 impl IdlValueExpr {
-    pub fn write<W: Write>(&self, out: &mut W) -> Result<(), Error> {
-        let _ = match self {
-            IdlValueExpr::None => write!(out, ""),
-            IdlValueExpr::DecLiteral(ref val) => write!(out, "{}", val),
-            IdlValueExpr::HexLiteral(ref val) => write!(out, "{}", val),
-            IdlValueExpr::OctLiteral(ref val) => write!(out, "{}", val),
-            IdlValueExpr::CharLiteral(ref val) => write!(out, "{}", val),
-            IdlValueExpr::WideCharLiteral(ref val) => write!(out, "{}", val),
-            IdlValueExpr::StringLiteral(ref val) => write!(out, "{}", val),
-            IdlValueExpr::WideStringLiteral(ref val) => write!(out, "{}", val),
-            IdlValueExpr::BooleanLiteral(val) => write!(out, "{}", val),
-            //            FloatLiteral(ref integ => write!(out, "{}", val), ref fract, ref expo, ref suffix) => write!(out, "{}", val),
-            IdlValueExpr::UnaryOp(op, ref expr) => op.write(out).and_then(|_| expr.write(out)),
-            IdlValueExpr::BinaryOp(op, ref expr) => op.write(out).and_then(|_| expr.write(out)),
-            IdlValueExpr::Expr(ref expr1, ref expr2) => expr1.write(out).and_then(|_| expr2.write(out)),
-            IdlValueExpr::Brace(ref expr) => write!(out, "{}", "(")
-                .and_then(|_| expr.write(out))
-                .and_then(|_| write!(out, "{}", ")")),
+    pub fn to_string(&self) -> String {
+        match self {
+            IdlValueExpr::None => "".to_string(),
+            IdlValueExpr::DecLiteral(ref val) => val.to_owned(),
+            IdlValueExpr::HexLiteral(ref val) => val.to_owned(),
+            IdlValueExpr::OctLiteral(ref val) => val.to_owned(),
+            IdlValueExpr::CharLiteral(ref val) => val.to_owned(),
+            IdlValueExpr::WideCharLiteral(ref val) => val.to_owned(),
+            IdlValueExpr::StringLiteral(ref val) => val.to_owned(),
+            IdlValueExpr::WideStringLiteral(ref val) => val.to_owned(),
+            IdlValueExpr::BooleanLiteral(val) => val.to_string(),
+            IdlValueExpr::UnaryOp(op, ref expr) => format!("{}{}", op.to_str(), expr.to_string()),
+            IdlValueExpr::BinaryOp(op, ref expr) => format!("{}{}", op.to_str(), expr.to_string()),
+            IdlValueExpr::Expr(ref expr1, ref expr2) => format!("{}{}", expr1.to_string(), expr2.to_string()),
+            IdlValueExpr::Brace(ref expr) => format!("({})", expr.to_string()),
             IdlValueExpr::FloatLiteral(ref integral, ref fraction, ref exponent, ref suffix) => {
-                integral.as_ref().and_then(|i| write!(out, "{}", i).err());
-                fraction.as_ref().and_then(|f| write!(out, ".{}", f).err());
-                exponent.as_ref().and_then(|e| write!(out, "e{}", e).err());
-                suffix.as_ref().and_then(|s| write!(out, "{}", s).err());
-                Ok(())
-            }
-            IdlValueExpr::ScopedName(ref name) => name.write(out),
-            //_ => unimplemented!(),
-        };
-        Ok(())
+                format!("{}.{}e{}{}", integral.as_ref().unwrap().clone(), fraction.as_ref().unwrap().clone(), exponent.as_ref().unwrap().clone(), suffix.as_ref().unwrap().clone())
+            },
+            IdlValueExpr::ScopedName(ref name) => name.to_string(),
+        }
     }
 }
 
@@ -159,30 +143,10 @@ pub struct IdlStructMember {
 }
 
 ///
-impl IdlStructMember {
-    ///
-    pub fn write<W: Write>(&self, out: &mut W, _level: usize) -> Result<(), Error> {
-        write!(out, "{}: ", self.id)
-            .and_then(|_| self.type_spec.write(out))
-            .and_then(|_| write!(out, ","))
-    }
-}
-
-///
 #[derive(Clone, Debug)]
 pub struct IdlSwitchElement {
     pub id: String,
     pub type_spec: Box<IdlTypeSpec>,
-}
-
-///
-impl IdlSwitchElement {
-    ///
-    pub fn write<W: Write>(&self, out: &mut W, _level: usize) -> Result<(), Error> {
-        write!(out, "{}: ", self.id)
-            .and_then(|_| self.type_spec.write(out))
-            .and_then(|_| write!(out, ","))
-    }
 }
 
 ///
@@ -197,28 +161,6 @@ pub enum IdlSwitchLabel {
 pub struct IdlSwitchCase {
     pub labels: Vec<IdlSwitchLabel>,
     pub elem_spec: Box<IdlSwitchElement>,
-}
-
-///
-impl IdlSwitchCase {
-    ///
-    pub fn write<W: Write>(&self, out: &mut W, level: usize) -> Result<(), Error> {
-        for label in &self.labels {
-            match label {
-                IdlSwitchLabel::Label(ref val_expr) =>
-                    write!(out, "{:indent$}", "", indent = level * INDENTION)
-                        .and_then(|_| val_expr.write(out))
-                        .and_then(|_| write!(out, "{}", "{"))
-                        .and_then(|_| self.elem_spec.write(out, level + 1))
-                        .and_then(|_| writeln!(out, "{}", "},"))?,
-                IdlSwitchLabel::Default =>
-                    write!(out, "{:indent$}default{}", "", "{", indent = level * INDENTION)
-                        .and_then(|_| self.elem_spec.write(out, level + 1))
-                        .and_then(|_| writeln!(out, "{}", "},"))?,
-            }
-        }
-        Ok(())
-    }
 }
 
 ///
@@ -252,52 +194,42 @@ pub enum IdlTypeSpec {
     ScopedName(IdlScopedName),
 }
 
-
 ///
 impl IdlTypeSpec {
     ///
-    pub fn write<W: Write>(&self, out: &mut W) -> Result<(), Error> {
-        let _ = match self {
-            IdlTypeSpec::F32Type => write!(out, "f32"),
-            IdlTypeSpec::F64Type => write!(out, "f64"),
-            IdlTypeSpec::F128Type => write!(out, "f128"),
-            IdlTypeSpec::I16Type => write!(out, "i16"),
-            IdlTypeSpec::I32Type => write!(out, "i32"),
-            IdlTypeSpec::I64Type => write!(out, "i64"),
-            IdlTypeSpec::U16Type => write!(out, "u16"),
-            IdlTypeSpec::U32Type => write!(out, "u32"),
-            IdlTypeSpec::U64Type => write!(out, "u64"),
-            IdlTypeSpec::CharType => write!(out, "char"),
-            IdlTypeSpec::WideCharType => write!(out, "char"),
-            IdlTypeSpec::BooleanType => write!(out, "bool"),
-            IdlTypeSpec::OctetType => write!(out, "u8"),
-            IdlTypeSpec::StringType(None) => write!(out, "String"),
-            IdlTypeSpec::WideStringType(None) => write!(out, "String"),
+    pub fn to_string(&self) -> String {
+        match self {
+            IdlTypeSpec::F32Type => "f32".to_string(),
+            IdlTypeSpec::F64Type => "f64".to_string(),
+            IdlTypeSpec::F128Type => "f128".to_string(),
+            IdlTypeSpec::I16Type => "i16".to_string(),
+            IdlTypeSpec::I32Type => "i32".to_string(),
+            IdlTypeSpec::I64Type => "i64".to_string(),
+            IdlTypeSpec::U16Type => "u16".to_string(),
+            IdlTypeSpec::U32Type => "u32".to_string(),
+            IdlTypeSpec::U64Type => "u64".to_string(),
+            IdlTypeSpec::CharType => "char".to_string(),
+            IdlTypeSpec::WideCharType => "char".to_string(),
+            IdlTypeSpec::BooleanType => "bool".to_string(),
+            IdlTypeSpec::OctetType => "u8".to_string(),
+            IdlTypeSpec::StringType(None) => "String".to_string(),
+            IdlTypeSpec::WideStringType(None) => "String".to_string(),
             // TODO implement String/Sequence bounds
-            IdlTypeSpec::StringType(_) => write!(out, "String"),
+            IdlTypeSpec::StringType(_) => "String".to_string(),
             // TODO implement String/Sequence bounds for serializer and deserialzer
-            IdlTypeSpec::WideStringType(_) => write!(out, "String"),
+            IdlTypeSpec::WideStringType(_) => "String".to_string(),
             IdlTypeSpec::SequenceType(typ_expr) => {
-                write!(out, "Vec<")
-                    .and_then(|_| typ_expr.as_ref().write(out))
-                    .and_then(|_| write!(out, ">"))
+                format!("Vec<{}>", typ_expr.as_ref().to_string())
             }
             IdlTypeSpec::ArrayType(typ_expr, dim_expr_list) => {
-                for _ in dim_expr_list { let _ = write!(out, "["); }
-                let _ = typ_expr.as_ref().write(out);
-                for dim_expr in dim_expr_list {
-                    // TODO return result
-                    let _ = write!(out, ";")
-                        .and_then(|_| dim_expr.as_ref().write(out))
-                        .and_then(|_| write!(out, "]"));
-                }
-                Ok(())
-            }
-            IdlTypeSpec::ScopedName(ref name) => name.write(out),
+                let dim_list_str = dim_expr_list.into_iter().map(|expr| {
+                    format!(";{}]", expr.to_string())
+                }).collect::<String>();
+                format!("{}{}{dim_list_str}", "[".repeat(dim_expr_list.len()), typ_expr.to_string())
+            },
+            IdlTypeSpec::ScopedName(ref name) => name.to_string(),
             _ => unimplemented!(),
-        };
-
-        Ok(())
+        }
     }
 }
 
@@ -322,84 +254,104 @@ impl Default for IdlTypeDclKind {
 }
 
 ///
-#[derive(Clone,
-Debug,
-Default)]
+#[derive(Clone, Debug, Default)]
 pub struct IdlTypeDcl(pub IdlTypeDclKind);
+
+#[derive(Serialize)]
+struct IdlStructField {
+    name: String,
+    type_str: String,
+}
+
+#[derive(Serialize)]
+struct IdlSwitchField {
+    name: String,
+    element_id: String,
+    element_type: String,
+}
 
 ///
 impl IdlTypeDcl {
     ///
     ///
-    pub fn write<W: Write>(&mut self, out: &mut W, level: usize) -> Result<(), Error> {
+    pub fn render(&mut self, env: &minijinja::Environment, level: usize) -> Result<String, minijinja::Error> {
         match self.0 {
             IdlTypeDclKind::TypeDcl(ref id, ref type_spec) => {
-                // TODO collect/return result
-                let _ = writeln!(out, "\n{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_NON_CAMEL_CASE_TYPES, indent = level * INDENTION);
-                let _ = write!(out, "{:indent$}pub type {} = ", "", id, indent = level * INDENTION);
-                let _ = type_spec.as_ref().write(out);
-                let _ = writeln!(out, ";");
-                Ok(())
+                let tmpl = env.get_template("typedef.j2")?;
+                tmpl.render(
+                    minijinja::context!{
+                        typedef_name => id,
+                        typedef_type => type_spec.to_string(),
+                        indent_level => level
+                    }
+                )
             }
             IdlTypeDclKind::StructDcl(ref id, ref type_spec) => {
-                // TODO collect/return result
-                let _ = writeln!(out, "");
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_NON_CAMEL_CASE_TYPES, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_SERDE, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_CLONE_DEBUG, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}pub struct {} {}", "", id, "{", indent = level * INDENTION);
-                for member in type_spec {
-                    let _ = write!(out, "{:indent$}pub ", "", indent = (level +1) * INDENTION)
-                        .and_then(|_| member.as_ref().write(out, level + 1))
-                        .and_then(|_| writeln!(out));
-                }
-                let _ = writeln!(out, "{:indent$}{}", "", "}", indent = level * INDENTION);
-                Ok(())
+                let tmpl = env.get_template("struct.j2")?;
+                let fields = type_spec
+                    .into_iter()
+                    .map(|field|
+                        IdlStructField {
+                            name: field.id.clone(),
+                            type_str: field.type_spec.to_string()
+                        }
+                    ).collect::<Vec<IdlStructField>>();
+
+                tmpl.render(
+                    minijinja::context!{
+                        struct_name => id,
+                        fields,
+                        indent_level => level
+                    }
+                )
             }
             IdlTypeDclKind::EnumDcl(ref id, ref enums) => {
-                // TODO collect/return result
-                let _ = writeln!(out, "");
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_NON_CAMEL_CASE_TYPES, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_SERDE, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_CLONE_DEBUG, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}pub enum {} {}", "", id, "{", indent = level * INDENTION);
-                for variant in enums {
-                    let _ = writeln!(out, "{:indent$}{},", "", variant, indent = (level +1) * INDENTION);
-                }
-                let _ = writeln!(out, "{:indent$}{}", "", "}", indent = level * INDENTION);
-                Ok(())
+                let tmpl = env.get_template("enum.j2")?;
+                tmpl.render(
+                    minijinja::context!{
+                        enum_name => id,
+                        variants => enums,
+                        indent_level => level
+                    }
+                )
             }
             IdlTypeDclKind::UnionDcl(ref id, ref _type_spec, ref switch_cases) => {
-                // TODO collect/return result
-                let _ = writeln!(out, "");
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_NON_CAMEL_CASE_TYPES, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_SERDE, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_CLONE_DEBUG, indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}pub enum {} {}", "", id, "{", indent = level * INDENTION);
-                for case in switch_cases {
-                    let _ = case.write(out, level + 1);
-                }
-                let _ = writeln!(out, "{:indent$}{}", "", "}", indent = level * INDENTION);
+                let tmpl = env.get_template("union_switch.j2")?;
+                let union_members = switch_cases
+                    .into_iter()
+                    .map(|case|
+                        case.labels.clone()
+                            .into_iter()
+                            .map(|label| {
+                                let label = match label {
+                                    IdlSwitchLabel::Label(label) => label.to_string(),
+                                    IdlSwitchLabel::Default => "default".to_owned(),
+                                };
 
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}// TODO custom de-/serializer", "", indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
+                                IdlSwitchField {
+                                    name: label.to_string(),
+                                    element_id: case.elem_spec.id.clone(),
+                                    element_type: case.elem_spec.type_spec.to_string(),
+                                }
+                            }).collect::<Vec<IdlSwitchField>>()
+                    ).flatten()
+                    .collect::<Vec<IdlSwitchField>>();
 
-                Ok(())
-            }
-            _ => Ok(())
+                tmpl.render(
+                    minijinja::context!{
+                        union_name => id,
+                        union_members,
+                        indent_level => level
+                    }
+                )
+            },
+            IdlTypeDclKind::None => Ok(String::new())
         }
     }
 }
 
 ///
-#[derive(Clone,
-Default,
-Debug)]
+#[derive(Clone, Default, Debug)]
 pub struct IdlConstDcl {
     pub id: String,
     pub typedcl: Box<IdlTypeSpec>,
@@ -409,15 +361,16 @@ pub struct IdlConstDcl {
 ///
 impl IdlConstDcl {
     ///
-    ///
-    pub fn write<W: Write>(&mut self, out: &mut W, level: usize) -> Result<(), Error> {
-        writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION)
-            .and_then(|_| write!(out, "{:indent$}pub const {}", "", self.id, indent = level * INDENTION))
-            .and_then(|_| write!(out, ": "))
-            .and_then(|_| self.typedcl.write(out))
-            .and_then(|_| write!(out, " = "))
-            .and_then(|_| self.value.write(out))
-            .and_then(|_| writeln!(out, ";"))
+    pub fn render(&mut self, env: &minijinja::Environment, level: usize) -> Result<String, minijinja::Error> {
+        let tmpl = env.get_template("const.j2")?;
+        tmpl.render(
+            minijinja::context!{
+                const_name => self.id,
+                const_type => self.typedcl.to_string(),
+                const_value => self.value.to_string(),
+                indent_level => level
+            }
+        )
     }
 }
 
@@ -432,7 +385,6 @@ pub struct IdlModule {
     pub constants: LinkedHashMap<String, Box<IdlConstDcl>>,
 }
 
-
 ///
 impl IdlModule {
     pub fn new(id: Option<String>) -> IdlModule {
@@ -445,52 +397,52 @@ impl IdlModule {
         }
     }
 
-    pub fn write<W: Write>(&mut self, out: &mut W, level: usize) -> Result<(), Error> {
+    pub fn render(&mut self, env: &minijinja::Environment, level: usize) -> Result<String, minijinja::Error> {
+        let mut module_info = String::new();
+        let add = if self.id.is_some() { 1 } else { 0 };
+
+        // TODO populate this instead of hardcoded solution
+        let indent = level * INDENTION;
         for required_use in &self.uses {
-            let _ = writeln!(out, "{:indent$}{}", "",
-                    ATTR_ALLOW_UNUSED_IMPORTS, indent = level * INDENTION)
-                .and_then(|_| writeln!(out, "{:indent$}{}", "",
-                                    required_use, indent = level * INDENTION));
+            let uses = format!("{:indent$}{ATTR_ALLOW_UNUSED_IMPORTS}\n{:indent$}{required_use}\n", "", "");
+            module_info.push_str(&uses);
         }
 
-        let _prolog = match self.id {
-            Some(ref id_str) =>
-                writeln!(out, "{:indent$}{}", "",
-                         ATTR_ALLOW_NON_SNAKE_CASE, indent = level * INDENTION)
-                    .and_then(|_| writeln!(out, "{:indent$}pub mod {} {}", "", id_str, "{", indent = level * INDENTION)),
-            _ => write!(out, ""),
-        };
-
-        let add: usize = if self.id.is_some() { 1 } else { 0 };
-
-        let _ = writeln!(out, "{:indent$}{}", "",
-                         ATTR_ALLOW_UNUSED_IMPORTS, indent = (level + add) * INDENTION)
-            .and_then(|_| writeln!(out, "{:indent$}{}", "",
-                                   IMPORT_VEC, indent = (level + add) * INDENTION));
-
-        let _ = writeln!(out, "{:indent$}{}", "",
-                         ATTR_ALLOW_UNUSED_IMPORTS, indent = (level + add) * INDENTION)
-            .and_then(|_| writeln!(out, "{:indent$}{}", "",
-                                   IMPORT_SERDE, indent = (level + add) * INDENTION));
+        let use_vec = format!("{:indent$}{ATTR_ALLOW_UNUSED_IMPORTS}\n{:indent$}{IMPORT_VEC}\n", "", "", indent = (level + add) * INDENTION);
+        let use_serde = format!("{:indent$}{ATTR_ALLOW_UNUSED_IMPORTS}\n{:indent$}{IMPORT_SERDE}\n", "", "", indent = (level + add) * INDENTION);
+        module_info.push_str(&use_vec);
+        module_info.push_str(&use_serde);
 
         for typ in self.types.entries() {
-            typ.into_mut().write(out, level + add)?;
+            let rendered = typ.into_mut().render(&env, level + add)?;
+            module_info.push_str(&rendered);
+            module_info.push('\n');
         }
 
         for module in self.modules.entries() {
-            module.into_mut().write(out, level + add)?;
+            let rendered = module.into_mut().render(&env, level + add)?;
+            module_info.push_str(&rendered);
+            module_info.push('\n');
         }
 
         for cnst in self.constants.entries() {
-            cnst.into_mut().write(out, level + add)?;
+            let rendered = cnst.into_mut().render(&env, level + add)?;
+            module_info.push_str(&rendered);
+            module_info.push('\n');
         }
 
-        let _epilog = match self.id {
-            Some(_) => writeln!(out, "{:indent$}{}", "", "}", indent = level * INDENTION),
-            _ => write!(out, ""),
-        };
-
-        Ok(())
+        match self.id {
+            Some(ref id_str) => {
+                let tmpl = env.get_template("module.j2")?;
+                tmpl.render(
+                    minijinja::context!{
+                        module_name => id_str,
+                        module_information => module_info,
+                        indent_level => level
+                    }
+                )
+            },
+            None => Ok(module_info),
+        }
     }
 }
-

@@ -8,10 +8,10 @@ use serde_derive::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize)]
 #[derive(Clone, Debug)]
 pub enum Foo {
-    LABEL0{l: i32,},
-    LABEL1{s: i16,},
-    LABEL2{s: i16,},
-    default{o: u8,},
+    LABEL0{ l: i32, },
+    LABEL1{ s: i16, },
+    LABEL2{ s: i16, },
+    default{ o: u8, },
 }
 //
 // TODO custom de-/serializer

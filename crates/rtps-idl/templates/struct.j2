@@ -1,0 +1,25 @@
+{% set indent = "    " %}{% set current_indent = indent * (indent_level if indent_level is defined else 0) %}
+{{ current_indent }}#[allow(dead_code)]
+{{ current_indent }}#[allow(non_camel_case_types)]
+{{ current_indent }}#[derive(Serialize, Deserialize)]
+{{ current_indent }}#[derive(Clone, Debug)]
+{{ current_indent }}pub struct {{ struct_name }} {
+{% for field in fields %}{{ current_indent }}    pub {{ field.name }}: {{ field.type_str }},{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
+{{ current_indent }}}
+
+{{ current_indent }}impl {{ struct_name }} {
+{{ current_indent }}    pub fn new({% for field in fields %}{{ field.name }}: {{ field.type_str }}, {% endfor %}) -> Self {
+{{ current_indent }}        Self {
+{% for field in fields %}{{ current_indent }}            {{ field.name }},{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
+{{ current_indent }}        }
+{{ current_indent }}    }
+{% for field in fields %}
+{{ current_indent }}    pub fn {{ field.name }}(&self) -> &{{ field.type_str }} {
+{{ current_indent }}        &self.{{ field.name }}
+{{ current_indent }}    }
+
+{{ current_indent }}    pub fn set_{{ field.name }}(&mut self, value: {{ field.type_str }}) {
+{{ current_indent }}        self.{{ field.name }} = value;
+{{ current_indent }}    }
+{% endfor %}
+{{ current_indent }}}

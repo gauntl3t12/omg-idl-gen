@@ -11,11 +11,7 @@ const IDL_INFILE: &str = "dds/DdsDcpsGuid.idl";
 
 #[test]
 fn convert_idl() -> Result<(), Error> {
-    let config = Configuration::new(
-        Path::new(IDL_DIR),
-        Path::new(IDL_INFILE),
-        false
-    );
+    let config = Configuration::new(Path::new(IDL_DIR), Path::new(IDL_INFILE), false);
 
     generate_with_search_path(&mut stdout(), &config).map_err(|_| Error::from(ErrorKind::NotFound))
 }

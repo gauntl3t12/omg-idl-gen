@@ -5,6 +5,7 @@
 mod ast;
 
 use crate::ast::*;
+use minijinja;
 use pest::Parser;
 use pest::iterators::{Pair, Pairs};
 use rtps_idl_grammar::{IdlParser, Rule};
@@ -52,12 +53,6 @@ impl Configuration {
 }
 
 ///
-pub fn load_idl(_config: &Configuration, _path: &str) -> Result<String, Error> {
-    return Ok("".to_owned());
-}
-
-
-///
 type Scope = Vec<String>;
 
 ///
@@ -66,7 +61,6 @@ struct Context<'i> {
     config: &'i Configuration,
     root_module: Box<IdlModule>,
 }
-
 
 impl<'i> Context<'i> {
     pub fn new(config: &'i Configuration) -> Context<'i> {
@@ -750,9 +744,11 @@ fn generate_with_loader<W: Write, L: IdlLoader>(
         let _ = ctx.process::<L>(&mut scope, loader, &p);
     }
 
-    ctx.root_module.as_mut().write(out, 0).map_err(|_| IdlError::InternalError)
+    let mut env = minijinja::Environment::new();
+    minijinja_embed::load_templates!(&mut env);
+    let root_module_text = ctx.root_module.render(&env, 0).map_err(|_| IdlError::InternalError)?;
+    write!(out, "{root_module_text}").map_err(|_| IdlError::InternalError)
 }
-
 
 #[derive(Debug, Clone, Default)]
 struct Loader {
@@ -787,5 +783,7 @@ impl IdlLoader for Loader {
 ///
 pub fn generate_with_search_path<W: Write>(out: &mut W, config: &Configuration) -> Result<(), IdlError> {
     let mut loader = Loader::new(&config.search_path);
+    let mut env = minijinja::Environment::new();
+    minijinja_embed::load_templates!(&mut env);
     generate_with_loader(out, &mut loader, config)
 }

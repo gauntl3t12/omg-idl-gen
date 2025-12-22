@@ -1,0 +1,4 @@
+{% set indent = "    " %}{% set current_indent = indent * (indent_level if indent_level is defined else 0) %}
+{{ current_indent }}#[allow(dead_code)]
+{{ current_indent }}#[allow(non_camel_case_types)]
+{{ current_indent }}pub type {{ typedef_name }} = {{ typedef_type }};

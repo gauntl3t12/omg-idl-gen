@@ -3,8 +3,10 @@
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0>
 use linked_hash_map::LinkedHashMap;
-use std::io::Write;
-use std::io::Error;
+use std::{
+    io::{Error, Write},
+    sync::Once,
+};
 
 ///
 #[derive(Clone, Debug)]
@@ -21,6 +23,7 @@ const ATTR_DERIVE_CLONE_DEBUG: &str = "#[derive(Clone, Debug)]";
 const ATTR_ALLOW_NON_CAMEL_CASE_TYPES: &str = "#[allow(non_camel_case_types)]";
 const ATTR_ALLOW_NON_SNAKE_CASE: &str = "#[allow(non_snake_case)]";
 const IMPORT_SERDE: &str = "use serde_derive::{Serialize, Deserialize};";
+const IMPORT_VEC: &str = "use std::vec::Vec;";
 const ATTR_ALLOW_UNUSED_IMPORTS: &str = "#[allow(unused_imports)]";
 
 impl UnaryOp {
@@ -223,7 +226,7 @@ impl IdlSwitchCase {
 pub enum IdlTypeSpec {
     None,
     ArrayType(Box<IdlTypeSpec>, Vec<Box<IdlValueExpr>>),
-    SequenceType(Box<IdlTypeSpec>, Option<Box<IdlValueExpr>>),
+    SequenceType(Box<IdlTypeSpec>),
     StringType(Option<Box<IdlValueExpr>>),
     WideStringType(Option<Box<IdlValueExpr>>),
     // FixedPtType,
@@ -274,7 +277,7 @@ impl IdlTypeSpec {
             IdlTypeSpec::StringType(_) => write!(out, "String"),
             // TODO implement String/Sequence bounds for serializer and deserialzer
             IdlTypeSpec::WideStringType(_) => write!(out, "String"),
-            IdlTypeSpec::SequenceType(typ_expr, _) => {
+            IdlTypeSpec::SequenceType(typ_expr) => {
                 write!(out, "Vec<")
                     .and_then(|_| typ_expr.as_ref().write(out))
                     .and_then(|_| write!(out, ">"))
@@ -332,10 +335,7 @@ impl IdlTypeDcl {
         match self.0 {
             IdlTypeDclKind::TypeDcl(ref id, ref type_spec) => {
                 // TODO collect/return result
-                let _ = writeln!(out, "");
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
+                let _ = writeln!(out, "\n{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_NON_CAMEL_CASE_TYPES, indent = level * INDENTION);
                 let _ = write!(out, "{:indent$}pub type {} = ", "", id, indent = level * INDENTION);
                 let _ = type_spec.as_ref().write(out);
@@ -345,8 +345,6 @@ impl IdlTypeDcl {
             IdlTypeDclKind::StructDcl(ref id, ref type_spec) => {
                 // TODO collect/return result
                 let _ = writeln!(out, "");
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_NON_CAMEL_CASE_TYPES, indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_SERDE, indent = level * INDENTION);
@@ -360,12 +358,9 @@ impl IdlTypeDcl {
                 let _ = writeln!(out, "{:indent$}{}", "", "}", indent = level * INDENTION);
                 Ok(())
             }
-
             IdlTypeDclKind::EnumDcl(ref id, ref enums) => {
                 // TODO collect/return result
                 let _ = writeln!(out, "");
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_NON_CAMEL_CASE_TYPES, indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_SERDE, indent = level * INDENTION);
@@ -377,12 +372,9 @@ impl IdlTypeDcl {
                 let _ = writeln!(out, "{:indent$}{}", "", "}", indent = level * INDENTION);
                 Ok(())
             }
-
             IdlTypeDclKind::UnionDcl(ref id, ref _type_spec, ref switch_cases) => {
                 // TODO collect/return result
                 let _ = writeln!(out, "");
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
-                let _ = writeln!(out, "{:indent$}//", "", indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_DEADCODE, indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_ALLOW_NON_CAMEL_CASE_TYPES, indent = level * INDENTION);
                 let _ = writeln!(out, "{:indent$}{}", "", ATTR_DERIVE_SERDE, indent = level * INDENTION);
@@ -434,7 +426,7 @@ impl IdlConstDcl {
 Default, Debug)]
 pub struct IdlModule {
     pub id: Option<String>,
-    pub level: usize,
+    pub uses: Vec<String>,
     pub modules: LinkedHashMap<String, Box<IdlModule>>,
     pub types: LinkedHashMap<String, Box<IdlTypeDcl>>,
     pub constants: LinkedHashMap<String, Box<IdlConstDcl>>,
@@ -443,10 +435,10 @@ pub struct IdlModule {
 
 ///
 impl IdlModule {
-    pub fn new(id: Option<String>, level: usize) -> IdlModule {
+    pub fn new(id: Option<String>) -> IdlModule {
         IdlModule {
             id: id,
-            level: level,
+            uses: Vec::new(),
             modules: LinkedHashMap::default(),
             types: LinkedHashMap::default(),
             constants: LinkedHashMap::default(),
@@ -454,16 +446,27 @@ impl IdlModule {
     }
 
     pub fn write<W: Write>(&mut self, out: &mut W, level: usize) -> Result<(), Error> {
+        for required_use in &self.uses {
+            let _ = writeln!(out, "{:indent$}{}", "",
+                    ATTR_ALLOW_UNUSED_IMPORTS, indent = level * INDENTION)
+                .and_then(|_| writeln!(out, "{:indent$}{}", "",
+                                    required_use, indent = level * INDENTION));
+        }
+
         let _prolog = match self.id {
             Some(ref id_str) =>
                 writeln!(out, "{:indent$}{}", "",
                          ATTR_ALLOW_NON_SNAKE_CASE, indent = level * INDENTION)
                     .and_then(|_| writeln!(out, "{:indent$}pub mod {} {}", "", id_str, "{", indent = level * INDENTION)),
-
             _ => write!(out, ""),
         };
 
         let add: usize = if self.id.is_some() { 1 } else { 0 };
+
+        let _ = writeln!(out, "{:indent$}{}", "",
+                         ATTR_ALLOW_UNUSED_IMPORTS, indent = (level + add) * INDENTION)
+            .and_then(|_| writeln!(out, "{:indent$}{}", "",
+                                   IMPORT_VEC, indent = (level + add) * INDENTION));
 
         let _ = writeln!(out, "{:indent$}{}", "",
                          ATTR_ALLOW_UNUSED_IMPORTS, indent = (level + add) * INDENTION)

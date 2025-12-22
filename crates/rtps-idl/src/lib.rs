@@ -2,23 +2,24 @@
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0>
-extern crate linked_hash_map;
-
 mod ast;
 
+use crate::ast::*;
 use pest::Parser;
 use pest::iterators::{Pair, Pairs};
 use rtps_idl_grammar::{IdlParser, Rule};
-use std::collections::HashMap;
-use std::io::{Error, ErrorKind};
-use std::io::{Write, Read};
-use std::fs::File;
-
-use crate::ast::*;
-
-const MODULE_PRELUDE: &[u8] = b"#[allow(unused_imports)]
-use std::vec::Vec;
-";
+use std::{
+    fs::File,
+    io::{
+        Error,
+        Write,
+        Read,
+    },
+    path::{
+        Path,
+        PathBuf,
+    },
+};
 
 ///
 #[derive(Debug)]
@@ -32,27 +33,21 @@ pub enum IdlError {
 
 ///
 pub trait IdlLoader {
-    fn load(&self, filename: &str) -> Result<String, Error>;
+    fn load(&self, filename: &Path) -> Result<String, Error>;
 }
 
 ///
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Configuration {
-    pub definition: HashMap<String, String>,
+    pub search_path: PathBuf,
+    pub idl_file: PathBuf,
     pub verbose: bool,
 }
 
 ///
 impl Configuration {
-    pub fn new(defs: HashMap<String, String>, verbose: bool) -> Configuration {
-        Configuration { definition: defs, verbose: verbose }
-    }
-}
-
-///
-impl Default for Configuration {
-    fn default() -> Configuration {
-        Configuration { definition: HashMap::default(), verbose: false }
+    pub fn new(search_path: &Path, idl_file: &Path, verbose: bool) -> Configuration {
+        Configuration { search_path: search_path.to_path_buf(), idl_file: idl_file.to_path_buf(), verbose }
     }
 }
 
@@ -69,17 +64,15 @@ type Scope = Vec<String>;
 #[derive(Debug, Clone)]
 struct Context<'i> {
     config: &'i Configuration,
-    definitions: HashMap<String, String>,
     root_module: Box<IdlModule>,
 }
 
 
 impl<'i> Context<'i> {
-    pub fn new(config: &'i Configuration) -> Context {
+    pub fn new(config: &'i Configuration) -> Context<'i> {
         Context {
             config: &config,
-            definitions: HashMap::default(),
-            root_module: Box::new(IdlModule::new(None, 0)),
+            root_module: Box::new(IdlModule::new(None)),
         }
     }
 
@@ -87,12 +80,11 @@ impl<'i> Context<'i> {
     fn lookup_module(&mut self, scope: &Scope) -> &mut Box<IdlModule> {
         // Starting from Root traverse the scope-path
         let mut current_module = &mut self.root_module;
-        let level = scope.len();
 
         for name in scope {
             let submodule =
                 current_module.modules.entry(name.to_owned()).or_insert(
-                    Box::new(IdlModule::new(Some(name.to_owned()), level)));
+                    Box::new(IdlModule::new(Some(name.to_owned()))));
             current_module = submodule;
         }
 
@@ -155,21 +147,21 @@ impl<'i> Context<'i> {
                 None => Ok(Box::new(IdlTypeSpec::WideStringType(None))),
                 Some(ref p) => {
                     let pos_int_const = self.read_const_expr(scope, p)?;
-                    Ok(Box::new(IdlTypeSpec::WideStringType(Some(pos_int_const))))
+                    Ok(Box::new(IdlTypeSpec::WideStringType(Some(pos_int_const)))) // Needs to be a &str
                 }
             },
             Rule::sequence_type => match (iter.next(), iter.next()) {
                 (Some(ref typ), None) => {
                     let typ_expr = self.read_type_spec(scope,
                                                        typ)?;
-                    Ok(Box::new(IdlTypeSpec::SequenceType(typ_expr, None)))
+                    Ok(Box::new(IdlTypeSpec::SequenceType(typ_expr)))
                 }
                 (Some(ref typ), Some(ref bound)) => {
                     let typ_expr = self.read_type_spec(scope,
                                                        typ)?;
-                    let bound_expr = self.read_const_expr(scope,
+                    let _bound_expr = self.read_const_expr(scope,
                                                           bound)?;
-                    Ok(Box::new(IdlTypeSpec::SequenceType(typ_expr, Some(bound_expr))))
+                    Ok(Box::new(IdlTypeSpec::SequenceType(typ_expr)))
                 }
                 _ => panic!(),
             },
@@ -189,8 +181,8 @@ impl<'i> Context<'i> {
     }
 
     /// declarator = { array_declarator | simple_declarator }
-     /// array_declarator = { identifier ~ fixed_array_size+ }
-     /// simple_declarator = { identifier }
+    /// array_declarator = { identifier ~ fixed_array_size+ }
+    /// simple_declarator = { identifier }
     pub fn read_struct_member_declarator(&mut self, scope: &mut Scope,
                                          pair: &Pair<Rule>, type_spec: &Box<IdlTypeSpec>)
                                          -> Result<Box<IdlStructMember>, IdlError>
@@ -470,7 +462,7 @@ impl<'i> Context<'i> {
     }
 
     ///
-    pub fn process<L: IdlLoader>(&mut self, scope: &mut Scope, loader: &mut IdlLoader,
+    pub fn process<L: IdlLoader>(&mut self, scope: &mut Scope, loader: &mut dyn IdlLoader,
                                  pair: &Pair<Rule>) -> Result<(), IdlError>
     {
         let mut iter = pair.clone().into_inner();
@@ -495,13 +487,12 @@ impl<'i> Context<'i> {
 
                 Ok(())
             }
-
             // struct_def = { "struct" ~ identifier ~ (":" ~ scoped_name)? ~ "{" ~ member* ~ "}" }
             Rule::struct_def => {
                 let id = iter.next().unwrap().as_str().to_owned();
                 let key = id.clone();
                 let m1: Result<Vec<Vec<Box<IdlStructMember>>>, _> = iter.map(|p| {
-                    // skip hte member-node and read sibbling directly
+                    // skip the member-node and read sibbling directly
                     self.read_struct_member(scope, &p)
                 }).collect();
 
@@ -512,7 +503,6 @@ impl<'i> Context<'i> {
                                                                             members)));
                 self.add_type_dcl(scope, key, typedcl)
             }
-
             // union_def = { "union" ~ identifier ~ "switch" ~ "(" ~ switch_type_spec ~ ")" ~ "{" ~ switch_body ~ "}" }
             Rule::union_def => {
                 let id = self.read_identifier(scope, &iter.next().unwrap())?;
@@ -525,7 +515,6 @@ impl<'i> Context<'i> {
 
                 self.add_type_dcl(scope, key, union_def)
             }
-
             // type_declarator = { (template_type_spec | constr_type_dcl | simple_type_spec) ~ any_declarators }
             Rule::type_declarator => {
                 let type_spec =
@@ -538,7 +527,6 @@ impl<'i> Context<'i> {
                 }
                 Ok(())
             }
-
             // enum_dcl = { "enum" ~ identifier ~ "{" ~ enumerator ~ ("," ~ enumerator)* ~ ","? ~ "}" }
             // enumerator = { identifier }
             Rule::enum_dcl => {
@@ -562,13 +550,12 @@ impl<'i> Context<'i> {
                 let const_dcl = Box::new(IdlConstDcl { id: id, typedcl: type_spec, value: const_expr });
                 self.add_const_dcl(scope, key, const_dcl)
             }
-
             // include_directive = !{ "#" ~ "include" ~ (("<" ~ path_spec ~ ">") | ("\"" ~ path_spec ~ "\"")) }
             Rule::include_directive => {
                 match pair.clone().into_inner().nth(0) {
                     Some(ref p) => {
                         let fname = p.as_str();
-                        let data = loader.load(fname)
+                        let data = loader.load(&PathBuf::from(fname))
                             .map_err(|_| IdlError::FileNotFound(fname.to_owned()))?;
 
                         let idl: Pairs<Rule> =
@@ -583,8 +570,6 @@ impl<'i> Context<'i> {
                 }
                 Ok(())
             }
-
-
             // anything else
             _ => {
                 for p in iter {
@@ -746,15 +731,17 @@ impl<'i> Context<'i> {
 
 ///
 ///
-pub fn generate_with_loader<W: Write, L: IdlLoader>(
+fn generate_with_loader<W: Write, L: IdlLoader>(
     out: &mut W,
     loader: &mut L,
-    config: &Configuration,
-    idldecl: &str) -> Result<(), IdlError> {
+    config: &Configuration) -> Result<(), IdlError> {
     let mut ctx = Context::new(config);
 
+    let idl_file_data = load_from(&config.search_path, &config.idl_file)
+        .map_err(|_| IdlError::FileNotFound("Could not find requested idl_file".to_string()))?;
+
     let idl: Pairs<Rule> =
-        IdlParser::parse(Rule::specification, &idldecl)
+        IdlParser::parse(Rule::specification, &idl_file_data)
             .map_err(|e| IdlError::ErrorMesg(e.to_string()))?;
 
     let mut scope = Scope::new();
@@ -763,18 +750,16 @@ pub fn generate_with_loader<W: Write, L: IdlLoader>(
         let _ = ctx.process::<L>(&mut scope, loader, &p);
     }
 
-    let _ = out.write(MODULE_PRELUDE);
     ctx.root_module.as_mut().write(out, 0).map_err(|_| IdlError::InternalError)
 }
 
 
 #[derive(Debug, Clone, Default)]
 struct Loader {
-    search_path: Vec<String>,
+    search_path: PathBuf,
 }
 
-///
-fn load_from(prefix: &std::path::Path, filename: &str) -> Result<String, Error> {
+fn load_from(prefix: &Path, filename: &Path) -> Result<String, Error> {
     let fullname = prefix.join(filename);
 
     let mut file = File::open(fullname)?;
@@ -782,34 +767,25 @@ fn load_from(prefix: &std::path::Path, filename: &str) -> Result<String, Error> 
 
     file.read_to_string(&mut data)?;
 
-    return Ok(data);
+    Ok(data)
 }
 
-///
 impl Loader {
-    pub fn new(search_path: Vec<String>) -> Loader {
-        Loader { search_path: search_path }
-    }
-}
-
-///
-impl IdlLoader for Loader {
-    fn load(&self, filename: &str) -> Result<String, Error> {
-        for prefix in &self.search_path {
-            let prefix_path = std::path::Path::new(&prefix);
-            match load_from(&prefix_path, filename) {
-                Ok(data) => return Ok(data),
-                _ => continue,
-            }
+    pub fn new(search_path: &Path) -> Loader {
+        Loader {
+            search_path: search_path.to_path_buf(),
         }
-        Err(Error::from(ErrorKind::NotFound))
+    }
+}
+
+impl IdlLoader for Loader {
+    fn load(&self, filename: &Path) -> Result<String, Error> {
+        load_from(&self.search_path, filename)
     }
 }
 
 ///
-pub fn generate_with_search_path<W: Write>(out: &mut W, search_path: Vec<String>,
-                                           config: &Configuration, data: &str) -> Result<(), IdlError> {
-    let mut loader = Loader::new(search_path);
-
-    generate_with_loader(out, &mut loader, config, data)
+pub fn generate_with_search_path<W: Write>(out: &mut W, config: &Configuration) -> Result<(), IdlError> {
+    let mut loader = Loader::new(&config.search_path);
+    generate_with_loader(out, &mut loader, config)
 }

@@ -1,112 +1,61 @@
 extern crate rtps_idl;
-extern crate getopts;
 
-use rtps_idl::{IdlLoader, Configuration, generate_with_loader};
-use std::io::{Error, ErrorKind};
-use std::io::{self, Read};
-use std::fs::File;
-use getopts::Options;
-use std::env;
-use std::collections::HashMap;
-
-#[derive(Debug, Clone, Default)]
-struct Loader {
-    search_path: Vec<String>,
-}
-
-
-fn load_from(prefix: &std::path::Path, filename: &str) -> Result<String, Error> {
-    let fullname = prefix.join(filename);
-
-    let mut file = File::open(fullname)?;
-    let mut data = String::new();
-
-    file.read_to_string(&mut data)?;
-
-    return Ok(data);
-}
-
-impl Loader {
-    pub fn new(search_path: Vec<String>) -> Loader {
-        Loader { search_path: search_path }
-    }
-}
-
-impl IdlLoader for Loader {
-    fn load(&self, filename: &str) -> Result<String, Error> {
-        for prefix in &self.search_path {
-            let prefix_path = std::path::Path::new(&prefix);
-            match load_from(&prefix_path, filename) {
-                Ok(data) => return Ok(data),
-                _ => continue,
-            }
-        }
-        Err(Error::from(ErrorKind::NotFound))
-    }
-}
-
-//
-fn print_usage(program: &str, opts: Options) -> Result<(), std::io::Error> {
-    let brief = format!("Usage: {} [-o <outfile>] [-I <include_dir>] <idlfile>", program);
-    print!("{}", opts.usage(&brief));
-    return Err(Error::from(ErrorKind::NotFound));
-}
-
+use clap::{ArgAction, arg, command, value_parser};
+use rtps_idl::{Configuration, generate_with_search_path};
+use std::{
+    fs::File,
+    io::{Error, ErrorKind, stdout},
+    path::PathBuf,
+};
 
 fn main() -> Result<(), std::io::Error> {
-    let mut opts = Options::new();
-    opts.optmulti("I", "",
-                  "Add the specified 'directory' to the search path for include files.", "directory");
-    opts.optmulti("D", "",
-                  "Predefine 'name' as a macro, with definition 1.", "name");
-    opts.optopt("o", "",
-                "Write output to 'outfile'.", "outfile");
-    opts.optflag("v", "",
-                 "Verbose output for debugging'.");
-    opts.optflag("h", "help", "print this help menu");
-    let args: Vec<_> = env::args().collect();
-    let program = args[0].clone();
-    let matches = match opts.parse(&args[1..]) {
-        Ok(m) => m,
-        Err(f) => panic!(f.to_string()),
-    };
-    if matches.opt_present("h") {
-        return print_usage(&program, opts);
-    }
+    let matches = command!()
+    .arg(
+        arg!(
+            -I --include_dir <DIR> "Add the specified 'directory' to the search path for include files."
+        )
+        .default_value(".")
+        .required(false)
+        .value_parser(value_parser!(PathBuf)),
+    )
+    .arg(
+        arg!(
+            -v --verbose ... "Turn verbose logging on"
+        )
+        .required(false)
+        .action(ArgAction::SetTrue)
+    )
+    .arg(
+        arg!(
+            -o --output_file <FILE> "Write output to 'outfile'."
+        )
+        .required(false)
+        .value_parser(value_parser!(PathBuf)),
+    )
+    .arg(
+        arg!(
+            [idl_file] "IDL File to parse"
+        )
+        .required(true)
+        .value_parser(value_parser!(PathBuf)),)
+    .get_matches();
 
-    let search_path = matches.opt_strs("I");
+    let search_path = matches
+        .get_one::<PathBuf>("include_dir")
+        .expect("include_dir is defaulted");
 
-    let defs = matches.opt_strs("D")
-        .into_iter()
-        .map(|d| {
-            let mut iter = d.splitn(2, "=");
-            match (iter.next(), iter.next()) {
-                (Some(key), None) => (key.to_owned(), "1".to_owned()),
-                (Some(key), Some(val)) => (key.to_owned(), val.to_owned()),
-                (None, _) => panic!(),
-            }
-        })
-        .collect::<HashMap<String, String>>();
+    let idl_file = matches
+        .get_one::<PathBuf>("idl_file")
+        .expect("idl_file is required");
 
-    let mut loader = Loader::new(search_path);
+    let config = Configuration::new(search_path, idl_file, matches.get_flag("verbose"));
 
-    let infile = match matches.free.len() {
-        1 => matches.free[0].clone(),
-        _ => return print_usage(&program, opts),
-    };
-
-    let data =
-        load_from(&env::current_dir().unwrap(), &infile)
-            .map_err(|_| Error::new(ErrorKind::NotFound, ""))?;
-
-    let config = Configuration::new(defs, matches.opt_present("v"));
-
-    let result = match matches.opt_str("o") {
+    let result = match matches.get_one::<PathBuf>("output_file") {
         Some(outfile) => {
-            let mut of = File::create(std::path::Path::new(&outfile))?;
-            generate_with_loader(&mut of, &mut loader, &config, &data)
+            let mut of = File::create(outfile)?;
+            generate_with_search_path(&mut of, &config)
         }
-        _ => generate_with_loader(&mut io::stdout(), &mut loader, &config, &data),
+        _ => generate_with_search_path(&mut stdout(), &config),
     };
 
     match result {
@@ -118,17 +67,15 @@ fn main() -> Result<(), std::io::Error> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use rtps_idl::{generate_with_search_path, Configuration};
-    use super::Loader;
-    use std::io::Cursor;
-    use std::str;
-    use std::fs::File;
-    use std::path::Path;
-    use std::io::{Error, ErrorKind};
-    use std::io::{Write, Read};
+    use rtps_idl::{Configuration, generate_with_search_path};
+    use std::{
+        fs::File,
+        io::{Cursor, Read},
+        path::Path,
+        str,
+    };
 
     #[test]
     fn typedef_long() {
@@ -281,18 +228,7 @@ mod tests {
     }
 
     fn testvector_verify(testvector: &str) {
-        let input_path = Path::new(testvector).join("input.idl");
         let expected_path = Path::new(testvector).join("expected.rs");
-
-        let mut input_file = match File::open(input_path) {
-            Ok(file) => file,
-            Err(err) => {
-                eprintln!("{}", err);
-                panic!();
-            }
-        };
-        let mut input = String::new();
-        assert!(input_file.read_to_string(&mut input).is_ok());
 
         let mut expected_file = match File::open(expected_path) {
             Ok(file) => file,
@@ -304,12 +240,15 @@ mod tests {
         let mut expected = String::new();
         assert!(expected_file.read_to_string(&mut expected).is_ok());
 
-        let config = Configuration::default();
-        let search_path = vec![testvector.to_owned()];
+        let config = Configuration::new(
+            Path::new(testvector), 
+            Path::new("input.idl"), 
+            false
+        );
 
         // Create fake "file"
         let mut out = Cursor::new(Vec::new());
-        match generate_with_search_path(&mut out, search_path, &config, &input) {
+        match generate_with_search_path(&mut out, &config) {
             Ok(_) => (),
             Err(err) => {
                 eprint!("parse error {:?}", err);
@@ -319,6 +258,8 @@ mod tests {
         print_buffer(out.get_ref());
         let expected_bytes: &[u8] = expected.as_ref();
         assert_eq!(expected_bytes, out.get_ref().as_slice());
+
+        // assert compile
     }
 
     fn print_buffer(buf: &Vec<u8>) {

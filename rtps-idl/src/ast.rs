@@ -110,22 +110,22 @@ impl IdlValueExpr {
     pub fn to_string(&self) -> String {
         match self {
             IdlValueExpr::None => "".to_string(),
-            IdlValueExpr::DecLiteral(ref val) => val.to_owned(),
-            IdlValueExpr::HexLiteral(ref val) => val.to_owned(),
-            IdlValueExpr::OctLiteral(ref val) => val.to_owned(),
-            IdlValueExpr::CharLiteral(ref val) => val.to_owned(),
-            IdlValueExpr::WideCharLiteral(ref val) => val.to_owned(),
-            IdlValueExpr::StringLiteral(ref val) => val.to_owned(),
-            IdlValueExpr::WideStringLiteral(ref val) => val.to_owned(),
+            IdlValueExpr::DecLiteral(val) => val.to_owned(),
+            IdlValueExpr::HexLiteral(val) => val.to_owned(),
+            IdlValueExpr::OctLiteral(val) => val.to_owned(),
+            IdlValueExpr::CharLiteral(val) => val.to_owned(),
+            IdlValueExpr::WideCharLiteral(val) => val.to_owned(),
+            IdlValueExpr::StringLiteral(val) => val.to_owned(),
+            IdlValueExpr::WideStringLiteral(val) => val.to_owned(),
             IdlValueExpr::BooleanLiteral(val) => val.to_string(),
-            IdlValueExpr::UnaryOp(op, ref expr) => format!("{}{}", op.to_str(), expr.to_string()),
-            IdlValueExpr::BinaryOp(op, ref expr) => format!("{}{}", op.to_str(), expr.to_string()),
-            IdlValueExpr::Expr(ref expr1, ref expr2) => format!("{}{}", expr1.to_string(), expr2.to_string()),
-            IdlValueExpr::Brace(ref expr) => format!("({})", expr.to_string()),
-            IdlValueExpr::FloatLiteral(ref integral, ref fraction, ref exponent, ref suffix) => {
+            IdlValueExpr::UnaryOp(op, expr) => format!("{}{}", op.to_str(), expr.to_string()),
+            IdlValueExpr::BinaryOp(op, expr) => format!("{}{}", op.to_str(), expr.to_string()),
+            IdlValueExpr::Expr(expr1, expr2) => format!("{}{}", expr1.to_string(), expr2.to_string()),
+            IdlValueExpr::Brace(expr) => format!("({})", expr.to_string()),
+            IdlValueExpr::FloatLiteral(integral, fraction, exponent, suffix) => {
                 format!("{}.{}e{}{}", integral.as_ref().unwrap().clone(), fraction.as_ref().unwrap().clone(), exponent.as_ref().unwrap().clone(), suffix.as_ref().unwrap().clone())
             },
-            IdlValueExpr::ScopedName(ref name) => name.to_string(),
+            IdlValueExpr::ScopedName(name) => name.to_string(),
         }
     }
 }
@@ -227,7 +227,7 @@ impl IdlTypeSpec {
                 }).collect::<String>();
                 format!("{}{}{dim_list_str}", "[".repeat(dim_expr_list.len()), typ_expr.to_string())
             },
-            IdlTypeSpec::ScopedName(ref name) => name.to_string(),
+            IdlTypeSpec::ScopedName(name) => name.to_string(),
             _ => unimplemented!(),
         }
     }

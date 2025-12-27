@@ -2,12 +2,11 @@
 name = "rtps-idl-grammar"
 description = "OMG RTPS IDL v4.0 grammar for pest"
 version = "0.2.3"
-authors = ["Frank Rehberger <frehberg@gmail.com>", "Kevin Pansky <kevin.pansky@gmail.com>"]
-repository = "https://github.com/frehberg/rtps-gen"
-documentation = "https://docs.rs/rtps-idl-grammar"
+authors = ["Frank Rehberger <frehberg@gmail.com>", "Kevin Pansky <kevin.pansky@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
+repository = "https://github.com/gauntl3t12/rtps-idl-gen"
 keywords = ["omg", "idl", "grammar", "parser"]
 categories = ["parsing"]
-license = "MIT/Apache-2.0"
+license = "Apache-2.0"
 readme = "README.md"
 
 [dependencies]

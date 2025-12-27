@@ -1,24 +1,3 @@
-[package]
-name = "rtps-idl-gen"
-version = "0.2.1"
-authors = ["Frank Rehberger <frehberg@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
-edition = "2024"
-description = "A command line tool reading RTPS IDL and generating corresponding Rust data types."
-license = "Apache-2.0"
-readme = "README.md"
-keywords = ["RTPS", "DDS", "data-centric", "IDL", "generator"]
-documentation = "https://docs.rs/rtps-idl-gen"
-homepage = "https://github.com/gauntl3t12/rtps-idl-gen.git"
-repository = "https://github.com/gauntl3t12/rtps-idl-gen.git"
-exclude = [
-    "docs/*",
-]
-
-[dependencies]
-log = { version = "0.4", features = ["std", "serde"] }
-rtps-idl = { path = "crates/rtps-idl", version = "^0.2" }
-clap = { version = "4.5.53", features = ["cargo"] }
-
-[dev-dependencies]
-# TODO: should be dependency of rtps-message
-rtps-elements = { path = "crates/rtps-elements", version = "^0.2" }
+[workspace]
+resolver = "3" 
+members = [ "rtps-idl", "rtps-elements", "rtps-idl-grammar", "rtps-idl-gen"]

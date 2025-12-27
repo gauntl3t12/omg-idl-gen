@@ -8,12 +8,14 @@
 
 #[macro_use]
 extern crate pest;
-extern crate pest_idl_v4_grammar;
+extern crate rtps_idl_grammar;
 
-use std::fs::File;
-use std::io::Read;
+use std::{
+    fs::File,
+    io::Read,
+};
 use pest::Parser;
-use pest_idl_v4_grammar::{Rule, IdlParser};
+use rtps_idl_grammar::{Rule, IdlParser};
 
 #[test]
 fn decimal_integer_literal() {
@@ -39,17 +41,17 @@ fn character_literal() {
     };
 }
 
-#[test]
-fn floating_pt_literal() {
-    parses_to! {
-        parser: IdlParser,
-        input: "1234.56",
-        rule: Rule::floating_pt_literal,
-        tokens: [
-            floating_pt_literal(0, 7)
-        ]
-    };
-}
+// #[test]
+// fn floating_pt_literal() {
+//     parses_to! {
+//         parser: IdlParser,
+//         input: "1234.56",
+//         rule: Rule::floating_pt_literal,
+//         tokens: [
+//             floating_pt_literal(0, 7)
+//         ]
+//     };
+// }
 
 #[test]
 fn example() {

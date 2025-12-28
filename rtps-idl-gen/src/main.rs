@@ -1,7 +1,5 @@
-extern crate rtps_idl;
-
 use clap::{ArgAction, arg, command, value_parser};
-use rtps_idl::{Configuration, generate_with_search_path};
+use rtps_idl_code_gen::{Configuration, generate_with_search_path};
 use std::{
     fs::File,
     io::{Error, ErrorKind, stdout},
@@ -69,7 +67,7 @@ fn main() -> Result<(), std::io::Error> {
 
 #[cfg(test)]
 mod tests {
-    use rtps_idl::{Configuration, generate_with_search_path};
+    use rtps_idl_code_gen::{Configuration, generate_with_search_path};
     use std::{
         fs::File,
         io::{Cursor, Read},

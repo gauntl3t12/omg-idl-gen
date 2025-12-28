@@ -10,12 +10,9 @@
 extern crate pest;
 extern crate rtps_idl_grammar;
 
-use std::{
-    fs::File,
-    io::Read,
-};
 use pest::Parser;
-use rtps_idl_grammar::{Rule, IdlParser};
+use rtps_idl_grammar::{IdlParser, Rule};
+use std::{fs::File, io::Read};
 
 #[test]
 fn decimal_integer_literal() {

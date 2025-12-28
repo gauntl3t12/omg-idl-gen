@@ -21,6 +21,7 @@ pub mod A {
     }
 
     impl Foo {
+
         pub fn new(m_l1: i32, m_l2: i32, m_d: f64, ) -> Self {
             Self {
                 m_l1,

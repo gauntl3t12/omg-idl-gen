@@ -16,4 +16,4 @@ serde = "1.0"
 serde_derive = "1.0"
 
 [build-dependencies]
-rtps-idl = { path = "../rtps-idl", version = "^0.2" }
+rtps-idl-code-gen = { path = "../rtps-idl-code-gen", version = "^0.2" }

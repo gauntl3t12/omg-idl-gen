@@ -5,3 +5,4 @@
 
 #include "dds/DdsDcpsGuid.idl"
 #include "dds/DdsDcpsCore.idl"
+#include "dds/DdsDcpsDomain.idl"

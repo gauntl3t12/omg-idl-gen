@@ -1,5 +1,5 @@
 [package]
-name = "rtps-idl"
+name = "rtps-idl-code-gen"
 version = "0.2.1"
 authors = ["Frank Rehberger <frehberg@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
 edition = "2024"

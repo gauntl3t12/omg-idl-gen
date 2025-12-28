@@ -13,23 +13,28 @@ pub enum Foo {
     VARIANT2,
 }
 
-impl Foo {
-    /// Method to convert string to enum variant
-    pub fn from_str(value: &str) -> Option<Foo> {
+#[derive(Debug, PartialEq, Eq)]
+pub struct FooError;
+
+impl std::str::FromStr for Foo {
+    type Err = FooError;
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         match value {
-            "VARIANT0" => Some(Foo::VARIANT0),
-            "VARIANT1" => Some(Foo::VARIANT1),
-            "VARIANT2" => Some(Foo::VARIANT2),
-            _ => None,
+            "VARIANT0" => Ok(Foo::VARIANT0),
+            "VARIANT1" => Ok(Foo::VARIANT1),
+            "VARIANT2" => Ok(Foo::VARIANT2),
+            _ => Err(FooError),
         }
     }
+}
 
-    /// Method to convert enum variant to &str
-    pub fn to_str(&self) -> &str {
-        match self {
+impl std::fmt::Display for Foo {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let enum_str = match self {
             Foo::VARIANT0 => "VARIANT0",
             Foo::VARIANT1 => "VARIANT1",
             Foo::VARIANT2 => "VARIANT2",
-        }
+        };
+        write!(f, "{enum_str}")
     }
 }

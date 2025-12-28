@@ -16,7 +16,7 @@ exclude = [
 
 [dependencies]
 log = { version = "0.4", features = ["std", "serde"] }
-rtps-idl = { path = "../rtps-idl", version = "^0.2" }
+rtps-idl-code-gen = { path = "../rtps-idl-code-gen", version = "^0.2" }
 clap = { version = "4.5.53", features = ["cargo"] }
 
 [dev-dependencies]

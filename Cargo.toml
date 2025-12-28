@@ -1,3 +1,3 @@
 [workspace]
 resolver = "3" 
-members = [ "rtps-idl", "rtps-elements", "rtps-idl-grammar", "rtps-idl-gen"]
+members = [ "rtps-idl-code-gen", "rtps-elements", "rtps-idl-grammar", "rtps-idl-gen"]

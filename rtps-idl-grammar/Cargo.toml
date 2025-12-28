@@ -1,8 +1,9 @@
 [package]
 name = "rtps-idl-grammar"
-description = "OMG RTPS IDL v4.0 grammar for pest"
 version = "0.2.3"
 authors = ["Frank Rehberger <frehberg@gmail.com>", "Kevin Pansky <kevin.pansky@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
+edition = "2024"
+description = "OMG RTPS IDL v4.0 grammar for pest"
 repository = "https://github.com/gauntl3t12/rtps-idl-gen"
 keywords = ["omg", "idl", "grammar", "parser"]
 categories = ["parsing"]

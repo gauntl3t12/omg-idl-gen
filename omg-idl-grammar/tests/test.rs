@@ -10,8 +10,8 @@
 extern crate pest;
 extern crate omg_idl_grammar;
 
-use pest::Parser;
 use omg_idl_grammar::{IdlParser, Rule};
+use pest::Parser;
 use std::{fs::File, io::Read};
 
 #[test]

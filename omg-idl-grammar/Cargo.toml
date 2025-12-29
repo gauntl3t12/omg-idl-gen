@@ -2,7 +2,8 @@
 name = "omg-idl-grammar"
 version = "0.2.3"
 authors = ["Frank Rehberger <frehberg@gmail.com>", "Kevin Pansky <kevin.pansky@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
-edition = "2024"
+edition = "2021"
+rust-version = "1.84.1"
 description = "OMG IDL v4.0 grammar for pest"
 repository = "https://github.com/gauntl3t12/omg-idl-gen"
 keywords = ["omg", "idl", "grammar", "parser", "rtps"]

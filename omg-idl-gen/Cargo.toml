@@ -2,7 +2,8 @@
 name = "omg-idl-gen"
 version = "0.2.1"
 authors = ["Frank Rehberger <frehberg@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
-edition = "2024"
+edition = "2021"
+rust-version = "1.84.1"
 description = "A command line tool reading OMG IDL and generating corresponding Rust data types."
 license = "Apache-2.0"
 readme = "README.md"

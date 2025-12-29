@@ -7,14 +7,14 @@ rust-version = "1.84.1"
 description = "OMG IDL to Rust code generator library"
 license = "Apache-2.0"
 readme = "README.md"
-keywords = ["OMG", "DDS", "data-centric", "IDL", "generator", "RTPS"]
+keywords = ["OMG", "DDS", "IDL", "generator", "RTPS"]
 documentation = "https://docs.rs/omg-idl"
 homepage = "https://github.com/gauntl3t12/omg-idl"
 repository = "https://github.com/gauntl3t12/omg-idl"
 
 [dependencies]
 pest = "^1.0"
-omg-idl-grammar = { path = "../omg-idl-grammar" }
+omg-idl-grammar = { path = "../omg-idl-grammar", version = "0.1" }
 log = { version = "0.4", features = ["std", "serde"] }
 linked-hash-map = "^0.5"
 minijinja-embed = "2.14.0"

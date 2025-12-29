@@ -17,4 +17,4 @@ serde = "1.0"
 serde_derive = "1.0"
 
 [build-dependencies]
-omg-idl-code-gen = { path = "../omg-idl-code-gen", version = "^0.2" }
+omg-idl-code-gen = { path = "../omg-idl-code-gen" }

@@ -17,9 +17,9 @@ exclude = [
 
 [dependencies]
 log = { version = "0.4", features = ["std", "serde"] }
-omg-idl-code-gen = { path = "../omg-idl-code-gen", version = "^0.2" }
+omg-idl-code-gen = { path = "../omg-idl-code-gen" }
 clap = { version = "4.5.53", features = ["cargo"] }
 
 [dev-dependencies]
 # TODO: should be dependency of omg-message
-omg-elements = { path = "../omg-elements", version = "^0." }
+omg-elements = { path = "../omg-elements" }

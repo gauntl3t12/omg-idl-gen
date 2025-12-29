@@ -1,19 +1,19 @@
 [package]
-name = "rtps-idl-code-gen"
+name = "omg-idl-code-gen"
 version = "0.2.1"
 authors = ["Frank Rehberger <frehberg@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
 edition = "2024"
-description = "RTPS IDL to Rust code generator library"
+description = "OMG IDL to Rust code generator library"
 license = "Apache-2.0"
 readme = "README.md"
-keywords = ["RTPS", "DDS", "data-centric", "IDL", "generator"]
-documentation = "https://docs.rs/rtps-idl-gen"
-homepage = "https://github.com/gauntl3t12/rtps-idl-gen"
-repository = "https://github.com/gauntl3t12/rtps-idl-gen"
+keywords = ["OMG", "DDS", "data-centric", "IDL", "generator", "RTPS"]
+documentation = "https://docs.rs/omg-idl"
+homepage = "https://github.com/gauntl3t12/omg-idl"
+repository = "https://github.com/gauntl3t12/omg-idl"
 
 [dependencies]
 pest = "^1.0"
-rtps-idl-grammar = { path = "../rtps-idl-grammar", version = "^0.2" }
+omg-idl-grammar = { path = "../omg-idl-grammar", version = "^0.2" }
 log = { version = "0.4", features = ["std", "serde"] }
 linked-hash-map = "^0.5"
 minijinja-embed = "2.14.0"

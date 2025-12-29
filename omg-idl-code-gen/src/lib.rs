@@ -10,7 +10,7 @@ use pest::{
     Parser,
     iterators::{Pair, Pairs},
 };
-use rtps_idl_grammar::{IdlParser, Rule};
+use omg_idl_grammar::{IdlParser, Rule};
 use std::{
     fs::File,
     io::{Error, Read, Write},
@@ -725,8 +725,8 @@ impl<'i> Context<'i> {
     // enumerator = { identifier }
 }
 
-/// Provided w/ an object that supports writing, an IDL Loader, and a RTPS Gen Config,
-/// generate Rust Types for the requested RTPS IDL files.
+/// Provided w/ an object that supports writing, an IDL Loader, and an OMG Gen Config,
+/// generate Rust Types for the requested OMG IDL files.
 ///
 /// @param out: An object that supports writing
 /// @param loader: Library Object to read IDL
@@ -787,8 +787,8 @@ impl IdlLoader for Loader {
     }
 }
 
-/// Provided w/ an object that supports writing and a RTPS Gen Config
-/// generate Rust Types for the requested RTPS IDL files.
+/// Provided w/ an object that supports writing and a OMG Gen Config
+/// generate Rust Types for the requested OMG IDL files.
 ///
 /// @param out: An object that supports writing
 /// @param config: Library config

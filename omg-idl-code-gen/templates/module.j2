@@ -1,5 +1,5 @@
 {% set indent = "    " %}{% set current_indent = indent * (indent_level if indent_level is defined else 0) %}
 {{ current_indent }}#[allow(non_snake_case)]
 {{ current_indent }}pub mod {{ module_name }} {
-{{ current_indent }}{{ module_information }}
+{{ module_information }}
 {{ current_indent }}}

@@ -70,7 +70,7 @@ mod tests {
     use omg_idl_code_gen::{Configuration, generate_with_search_path};
     use std::{
         fs::File,
-        io::{BufRead, Cursor, Read},
+        io::{Cursor, Read},
         path::Path,
         str,
     };

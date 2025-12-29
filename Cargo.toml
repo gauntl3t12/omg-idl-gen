@@ -1,24 +1,10 @@
-[package]
-name = "rtps-gen"
-version = "0.2.1"
-authors = ["Frank Rehberger <frehberg@gmail.com>"]
-edition = "2018"
-description = "A command line tool reading RTPS IDL and generating corresponding Rust data types."
-license = "Apache-2.0"
-readme = "README.md"
-keywords = ["RTPS", "DDS", "data-centric", "IDL", "generator"]
-documentation = "https://docs.rs/rtps-gen"
-homepage = "https://github.com/frehberg/rtps-gen.git"
-repository = "https://github.com/frehberg/rtps-gen.git"
-exclude = [
-    "docs/*",
-]
+[workspace]
+resolver = "3"
+members = [ "omg-idl-code-gen", "omg-elements", "omg-idl-grammar", "omg-idl-gen"]
 
-[dependencies]
-log = { version = "0.4", features = ["std", "serde"] }
-rtps-idl = { path = "crates/rtps-idl", version = "^0.2" }
-getopts = "0.2"
-
-[dev-dependencies]
-# TODO: should be dependency of rtps-message
-rtps-elements = { path = "crates/rtps-elements", version = "^0.2" }
+[profile.release]
+opt-level = "z"
+strip = true
+lto = true
+codegen-units = 1
+panic = "abort"

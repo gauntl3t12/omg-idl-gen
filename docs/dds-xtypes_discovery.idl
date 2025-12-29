@@ -240,7 +240,7 @@ module DDS {
         @id(0x0069) @optional   TypeIdV1     type_id; // XTYPES 1.1
         @id(0x0072) @optional   TypeObjectV1 type;    // XTYPES 1.1
         @id(0x0075) @optional   XTypes::TypeInformation type_information; // XTYPES 1.2
-        @id(0x001D)      DurabilityQosPolicy durability; 
+        @id(0x001D)      DurabilityQosPolicy durability;
         @id(0x001E)      DurabilityServiceQosPolicy durability_service;
         @id(0x0023)      DeadlineQosPolicy deadline;
         @id(0x0027)      LatencyBudgetQosPolicy latency_budget;
@@ -251,8 +251,8 @@ module DDS {
         @id(0x001F)      OwnershipQosPolicy ownership;
         @id(0x0006)      OwnershipStrengthQosPolicy ownership_strength;
         @id(0x0025)      DestinationOrderQosPolicy destination_order;
-        @id(0x0021)      PresentationQosPolicy presentation; 
-        @id(0x0029)      PartitionQosPolicy partition; 
+        @id(0x0021)      PresentationQosPolicy presentation;
+        @id(0x0029)      PartitionQosPolicy partition;
         @id(0x002E)      TopicDataQosPolicy topic_data;
         @id(0x002D)      GroupDataQosPolicy group_data;
         @id(0x0073)      DataRepresentationQosPolicy representation;
@@ -281,7 +281,7 @@ module DDS {
         @id(0x001F)      OwnershipQosPolicy ownership;
         @id(0x0025)      DestinationOrderQosPolicy destination_order;
         @id(0x002C)      UserDataQosPolicy user_data;
-        @id(0x0004)      TimeBasedFilterQosPolicy time_based_filter; 
+        @id(0x0004)      TimeBasedFilterQosPolicy time_based_filter;
         @id(0x0021)      PresentationQosPolicy presentation;
         @id(0x0029)      PartitionQosPolicy partition;
         @id(0x002E)      TopicDataQosPolicy topic_data;

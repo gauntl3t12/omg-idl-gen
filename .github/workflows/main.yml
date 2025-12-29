@@ -1,0 +1,48 @@
+---
+name: Build CI
+
+on:
+  push:
+    branches:
+      - main
+      - devel
+  pull_request:
+    branches:
+      - main
+      - devel
+
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        rust_versions: ["stable"]
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout the source code
+        uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust_versions }}
+      - name: Build
+        run: cargo build
+      - name: Test
+        run: |
+          cargo test --all-features
+          # This test needs another run under the release mode
+          cargo test --release --all-features
+        env:
+          RUSTFLAGS: -D warnings
+
+  wasm:
+    name: Build for WebAssembly (wasm32-unknown-unknown)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the source code
+        uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Build for wasm32-unknown-unknown
+        run: cargo build --target wasm32-unknown-unknown

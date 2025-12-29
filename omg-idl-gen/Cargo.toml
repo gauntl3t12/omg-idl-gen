@@ -1,0 +1,25 @@
+[package]
+name = "omg-idl-gen"
+version = "0.2.1"
+authors = ["Frank Rehberger <frehberg@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
+edition = "2021"
+rust-version = "1.84.1"
+description = "A command line tool reading OMG IDL and generating corresponding Rust data types."
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["OMG", "DDS", "data-centric", "IDL", "generator", "RTPS"]
+documentation = "https://docs.rs/omg-idl-gen"
+homepage = "https://github.com/gauntl3t12/omg-idl-gen"
+repository = "https://github.com/gauntl3t12/omg-idl-gen"
+exclude = [
+    "docs/*",
+]
+
+[dependencies]
+log = { version = "0.4", features = ["std", "serde"] }
+omg-idl-code-gen = { path = "../omg-idl-code-gen", version = "^0.2" }
+clap = { version = "4.5.53", features = ["cargo"] }
+
+[dev-dependencies]
+# TODO: should be dependency of omg-message
+omg-elements = { path = "../omg-elements", version = "^0.2" }

@@ -1,0 +1,26 @@
+[package]
+name = "omg-idl-code-gen"
+version = "0.2.1"
+authors = ["Frank Rehberger <frehberg@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
+edition = "2021"
+rust-version = "1.84.1"
+description = "OMG IDL to Rust code generator library"
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["OMG", "DDS", "data-centric", "IDL", "generator", "RTPS"]
+documentation = "https://docs.rs/omg-idl"
+homepage = "https://github.com/gauntl3t12/omg-idl"
+repository = "https://github.com/gauntl3t12/omg-idl"
+
+[dependencies]
+pest = "^1.0"
+omg-idl-grammar = { path = "../omg-idl-grammar", version = "^0.2" }
+log = { version = "0.4", features = ["std", "serde"] }
+linked-hash-map = "^0.5"
+minijinja-embed = "2.14.0"
+minijinja = "2.14.0"
+serde_derive = "1.0.228"
+serde = "1.0.228"
+
+[build-dependencies]
+minijinja-embed = "2.14.0"

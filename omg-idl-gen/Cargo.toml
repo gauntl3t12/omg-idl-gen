@@ -1,6 +1,6 @@
 [package]
 name = "omg-idl-gen"
-version = "0.2.1"
+version = "0.1.0"
 authors = ["Frank Rehberger <frehberg@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
 edition = "2021"
 rust-version = "1.84.1"
@@ -22,4 +22,4 @@ clap = { version = "4.5.53", features = ["cargo"] }
 
 [dev-dependencies]
 # TODO: should be dependency of omg-message
-omg-elements = { path = "../omg-elements", version = "^0.2" }
+omg-elements = { path = "../omg-elements", version = "^0." }

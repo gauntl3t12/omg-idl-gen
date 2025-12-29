@@ -1,5 +1,9 @@
-**# OMG IDLv4 to Rust code generator
+# OMG IDLv4 to Rust code generator
 
+[![docs](https://docs.rs/omg-idl-gen/badge.svg)](https://docs.rs/omg-idl-gen)
+[![crates.io](https://img.shields.io/crates/v/omg-idl-gen.svg)](https://crates.io/crates/omg-idl-gen)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.84.1+-green.svg)](https://github.com/gauntl3t12/omg-idl-gen#rust-version-requirements)
+[![CI](https://github.com/gauntl3t12/omg-idl-gen/actions/workflows/main.yml/badge.svg)](https://github.com/gauntl3t12/omg-idl-gen/actions/workflows/main.yml)
 [![Apache 2.0 licensed][licence-badge]][licence-url]
 
 A tool reading OMG IDLv4 and generating corresponding Rust data types and code.
@@ -9,6 +13,10 @@ Usage:
 ```shell
 omg-idl-gen -I <include-dir> data.idl -o output.rs
 ```
+
+## Rust Version Requirements
+
+1.84.1
 
 ## OMG IDLv4 to Rust Mapping
 

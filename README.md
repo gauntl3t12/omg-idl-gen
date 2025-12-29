@@ -1,13 +1,17 @@
-[![Apache 2.0 licensed][licence-badge]][licence-url]
-# RTPS IDL to Rust code generator
+**# OMG IDLv4 to Rust code generator
 
-A tool reading an IDL and generating corresponding Rust code.
+[![Apache 2.0 licensed][licence-badge]][licence-url]
+
+A tool reading OMG IDLv4 and generating corresponding Rust data types and code.
 
 Usage:
+
 ```shell
 omg-idl-gen -I <include-dir> data.idl -o output.rs
 ```
-## RTPS-IDL to Rust Mapping
+
+## OMG IDLv4 to Rust Mapping
+
 The IDL types are mapped onto Rust as follows. 
 If a type-mapping has not been decided, it is marked with 'NA'.  
 As RTPS is a data-centric framework in contrast to 
@@ -50,7 +54,7 @@ the the original OO background, the focus is put onto data structures, and ignor
 
 ## Mapping by examples
 
-## Templates
+### Templates
 
 | IDL | Rust |
 | ----- | ----- |
@@ -85,7 +89,11 @@ Note: Only switch types "switch (long)" is supported yet.
 | ----- | ----- |
 | union Foo switch (long) {<br>&ensp;case LABEL0: long l;<br>&ensp;case LABEL1:<br>&ensp;case LABEL2: short s;<br>&ensp;default: octet o[8];<br>}; | pub enum Foo {<br>&ensp;LABEL0{l: i32},<br>&ensp;LABEL2{s: i16},<br>&ensp;LABEL1{s: i16},<br>&ensp;default{o: [u8; 8]},<br>}  |
 | /* not yet, to be developed */<br>union Result switch (long) {<br>&ensp;case None: void _dummy;<br>&ensp;case Some: T t<br>}; | /* not yet, to be developed */<br>pub enum Result\<T> {<br>&ensp;None,<br>&ensp;Some(T),<br>}  |
-
+**
 
 [licence-badge]: https://img.shields.io/badge/License-Apache%202.0-blue.svg
-[licence-url]: LICENSE.md
+[licence-url]: LICENSE-APACHE
+
+## Credit
+
+The code underlying this repo was originally born in [rtps-gen](https://github.com/frehberg/rtps-gen) under the effort of [Frank Rehberger](https://github.com/frehberg). The original implementation has been updated to utilize Jinja templating, newer Rust standards, and reduced heap usage. The baselines will continue to diverage over time.

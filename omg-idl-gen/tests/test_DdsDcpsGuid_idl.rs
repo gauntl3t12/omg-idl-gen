@@ -1,6 +1,6 @@
-use omg_idl_code_gen::{Configuration, generate_with_search_path};
+use omg_idl_code_gen::{generate_with_search_path, Configuration};
 use std::{
-    io::{Error, ErrorKind, stdout},
+    io::{stdout, Error, ErrorKind},
     path::{Path, PathBuf},
 };
 

@@ -1,8 +1,8 @@
-use clap::{ArgAction, arg, command, value_parser};
-use omg_idl_code_gen::{Configuration, generate_with_search_path};
+use clap::{arg, command, value_parser, ArgAction};
+use omg_idl_code_gen::{generate_with_search_path, Configuration};
 use std::{
     fs::File,
-    io::{Error, ErrorKind, stdout},
+    io::{stdout, Error, ErrorKind},
     path::PathBuf,
 };
 
@@ -67,7 +67,7 @@ fn main() -> Result<(), std::io::Error> {
 
 #[cfg(test)]
 mod tests {
-    use omg_idl_code_gen::{Configuration, generate_with_search_path};
+    use omg_idl_code_gen::{generate_with_search_path, Configuration};
     use std::{
         fs::File,
         io::{Cursor, Read},

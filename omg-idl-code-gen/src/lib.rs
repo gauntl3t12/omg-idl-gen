@@ -8,8 +8,8 @@ mod ast;
 use ast::*;
 use omg_idl_grammar::{IdlParser, Rule};
 use pest::{
-    Parser,
     iterators::{Pair, Pairs},
+    Parser,
 };
 use std::{
     fs::File,

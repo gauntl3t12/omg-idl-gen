@@ -402,7 +402,7 @@ module DDS {
         boolean valid_data;
     };
 
-  typedef sequence<SampleInfo> SampleInfoSeq;
+    typedef sequence<SampleInfo> SampleInfoSeq;
 
 };
 

@@ -5,7 +5,7 @@ A tool reading an IDL and generating corresponding Rust code.
 
 Usage:
 ```shell
-rtps-gen -I <include-dir> data.idl -o output.rs
+omg-idl-gen -I <include-dir> data.idl -o output.rs
 ```
 ## RTPS-IDL to Rust Mapping
 The IDL types are mapped onto Rust as follows. 

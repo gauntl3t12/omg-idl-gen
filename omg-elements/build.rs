@@ -3,7 +3,7 @@
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0>
 
-use rtps_idl_code_gen::{generate_with_search_path, Configuration};
+use omg_idl_code_gen::{generate_with_search_path, Configuration};
 use std::{
     env,
     fs::File,

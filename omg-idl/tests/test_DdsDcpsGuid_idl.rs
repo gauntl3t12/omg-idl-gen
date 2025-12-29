@@ -1,10 +1,10 @@
-use rtps_idl_code_gen::{Configuration, generate_with_search_path};
+use omg_idl_code_gen::{Configuration, generate_with_search_path};
 use std::{
     io::{Error, ErrorKind, stdout},
     path::{Path, PathBuf},
 };
 
-const IDL_DIR: &str = "rtps-elements/files";
+const IDL_DIR: &str = "omg-elements/files";
 const IDL_INFILE: &str = "dds/DdsDcpsGuid.idl";
 
 #[test]

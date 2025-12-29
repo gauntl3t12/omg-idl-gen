@@ -8,10 +8,10 @@
 
 #[macro_use]
 extern crate pest;
-extern crate rtps_idl_grammar;
+extern crate omg_idl_grammar;
 
 use pest::Parser;
-use rtps_idl_grammar::{IdlParser, Rule};
+use omg_idl_grammar::{IdlParser, Rule};
 use std::{fs::File, io::Read};
 
 #[test]

@@ -4,10 +4,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0>
 use linked_hash_map::LinkedHashMap;
 use serde_derive::Serialize;
-use std::{
-    collections::HashSet,
-    fmt,
-};
+use std::{collections::HashSet, fmt};
 
 const INDENTION: usize = 4;
 const IMPORT_VEC: &str = "use std::vec::Vec;";
@@ -372,10 +369,7 @@ impl IdlConstDcl {
 
         // Rust does not support const String's. Convert them to &str
         let type_str = match &self.typedcl {
-            IdlTypeSpec::StringType(_) |
-            IdlTypeSpec::WideStringType(_) => {
-                "&str".to_owned()
-            },
+            IdlTypeSpec::StringType(_) | IdlTypeSpec::WideStringType(_) => "&str".to_owned(),
             _ => self.typedcl.to_string(),
         };
 
@@ -441,7 +435,8 @@ impl IdlModule {
         for required_use in uses {
             let uses = format!(
                 "{:indent$}{required_use}\n",
-                "", indent = (level + add) * INDENTION
+                "",
+                indent = (level + add) * INDENTION
             );
             module_info.push_str(&uses);
         }

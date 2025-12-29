@@ -6,11 +6,11 @@
 mod ast;
 
 use ast::*;
+use omg_idl_grammar::{IdlParser, Rule};
 use pest::{
     Parser,
     iterators::{Pair, Pairs},
 };
-use omg_idl_grammar::{IdlParser, Rule};
 use std::{
     fs::File,
     io::{Error, Read, Write},

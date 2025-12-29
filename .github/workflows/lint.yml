@@ -18,17 +18,13 @@ jobs:
     steps:
       - name: Checkout the source code
         uses: actions/checkout@v4
-
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: rustfmt, clippy
-
       - name: Run cargo check
         run: cargo check
-
       - name: Run rustfmt
         run: cargo +nightly fmt -- --check
-
       - name: Run Clippy
         run: rustup component add --toolchain nightly clippy && cargo +nightly clippy --all-features
         env:

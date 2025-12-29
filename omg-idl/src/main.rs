@@ -70,7 +70,7 @@ mod tests {
     use omg_idl_code_gen::{Configuration, generate_with_search_path};
     use std::{
         fs::File,
-        io::{Cursor, Read},
+        io::{BufRead, Cursor, Read},
         path::Path,
         str,
     };
@@ -256,9 +256,11 @@ mod tests {
         };
         print_buffer(out.get_ref());
         let expected_bytes: &[u8] = expected.as_ref();
-        assert_eq!(expected_bytes, out.get_ref().as_slice());
-
-        // assert compile
+        let text_no_carriage: Vec<u8> = out.get_ref().iter()
+            .filter(|&&b| b != b'\r')
+            .copied()
+            .collect();
+        assert_eq!(expected_bytes, text_no_carriage.as_slice());
     }
 
     fn print_buffer(buf: &Vec<u8>) {

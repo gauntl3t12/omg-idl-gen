@@ -19,26 +19,25 @@ module DDS {
    local interface Publisher;
 
    local interface DataWriterListener : Listener {
-    void on_offered_deadline_missed(
-      in DataWriter writer,
-      in OfferedDeadlineMissedStatus status);
+        void on_offered_deadline_missed(
+            in DataWriter writer,
+            in OfferedDeadlineMissedStatus status);
 
-    void on_offered_incompatible_qos(
-      in DataWriter writer,
-      in OfferedIncompatibleQosStatus status);
+        void on_offered_incompatible_qos(
+            in DataWriter writer,
+            in OfferedIncompatibleQosStatus status);
 
-    void on_liveliness_lost(
-      in DataWriter writer,
-      in LivelinessLostStatus status);
+        void on_liveliness_lost(
+            in DataWriter writer,
+            in LivelinessLostStatus status);
 
-    void on_publication_matched(
-      in DataWriter writer,
-      in PublicationMatchedStatus status);
+        void on_publication_matched(
+            in DataWriter writer,
+            in PublicationMatchedStatus status);
     };
 
     local interface PublisherListener : DataWriterListener {
-  };
-
+    };
 
    local interface DataWriter : Entity {
     // InstanceHandle_t register_instance(
@@ -79,8 +78,8 @@ module DDS {
     ReturnCode_t get_qos(inout DataWriterQos qos);
 
     ReturnCode_t set_listener(
-      in DataWriterListener a_listener,
-      in StatusMask mask);
+        in DataWriterListener a_listener,
+        in StatusMask mask);
 
     DataWriterListener get_listener();
 
@@ -116,28 +115,24 @@ module DDS {
     // ----------------------------------------------------------------------
     local interface Publisher : Entity {
     DataWriter create_datawriter(
-      in Topic a_topic,
-      in DataWriterQos qos,
-      in DataWriterListener a_listener,
-      in StatusMask mask);
+        in Topic a_topic,
+        in DataWriterQos qos,
+        in DataWriterListener a_listener,
+        in StatusMask mask);
 
-    ReturnCode_t delete_datawriter(
-      in DataWriter a_datawriter);
+    ReturnCode_t delete_datawriter(in DataWriter a_datawriter);
 
-    DataWriter lookup_datawriter(
-      in string topic_name);
+    DataWriter lookup_datawriter(in string topic_name);
 
     ReturnCode_t delete_contained_entities();
 
-    ReturnCode_t set_qos(
-      in PublisherQos qos);
+    ReturnCode_t set_qos(in PublisherQos qos);
 
-    ReturnCode_t get_qos(
-      inout PublisherQos qos);
+    ReturnCode_t get_qos(inout PublisherQos qos);
 
     ReturnCode_t set_listener(
-      in PublisherListener a_listener,
-      in StatusMask mask);
+        in PublisherListener a_listener,
+        in StatusMask mask);
 
     PublisherListener get_listener();
 
@@ -168,53 +163,51 @@ module DDS {
       inout DataWriterQos a_datawriter_qos,
       in TopicQos a_topic_qos);
     };
-
 };
 
 module DDS {
-  module DCPS {
+    module DCPS {
+        struct PublicationLostStatus {
+            ::DDS::InstanceHandleSeq subscription_handles;
+        };
 
-    struct PublicationLostStatus {
-      ::DDS::InstanceHandleSeq subscription_handles;
-    };
+        typedef PublicationLostStatus PublicationDisconnectedStatus;
+        typedef PublicationLostStatus PublicationReconnectedStatus;
+        typedef PublicationLostStatus DisassociationStatus;
 
-    typedef PublicationLostStatus PublicationDisconnectedStatus;
-    typedef PublicationLostStatus PublicationReconnectedStatus;
-    typedef PublicationLostStatus DisassociationStatus;
+        local interface DataWriterListener : ::DDS::DataWriterListener {
 
-    local interface DataWriterListener : ::DDS::DataWriterListener {
+        /// Called when a connection failure has been detected
+        /// and there are still associations using the connection
+        /// after the configurable graceful_disconnected_period.
+        void on_publication_disconnected(
+            in ::DDS::DataWriter reader,
+            in PublicationDisconnectedStatus status);
 
-      /// Called when a connection failure has been detected
-      /// and there are still associations using the connection
-      /// after the configurable graceful_disconnected_period.
-      void on_publication_disconnected(
-        in ::DDS::DataWriter reader,
-        in PublicationDisconnectedStatus status);
+        /// Called when a disconnected connection
+        /// has been reconnected.
+        void on_publication_reconnected(
+            in ::DDS::DataWriter reader,
+            in PublicationReconnectedStatus status);
 
-      /// Called when a disconnected connection
-      /// has been reconnected.
-      void on_publication_reconnected(
-        in ::DDS::DataWriter reader,
-        in PublicationReconnectedStatus status);
+        /// called when a connection is lost and hence one
+        /// or more associations from this publication to
+        /// some subscribers have been lost.
+        /// A connection is "lost" when the retry attempts
+        /// have been exhausted.
+        void on_publication_lost(
+            in ::DDS::DataWriter writer,
+            in PublicationLostStatus status);
 
-      /// called when a connection is lost and hence one
-      /// or more associations from this publication to
-      /// some subscribers have been lost.
-      /// A connection is "lost" when the retry attempts
-      /// have been exhausted.
-      void on_publication_lost(
-        in ::DDS::DataWriter writer,
-        in PublicationLostStatus status);
+        /// called when the connection object is cleaned up and
+        /// the reconnect thread exits.
+        /// This hook is added for testing the reconnect thread
+        /// leaking problem when the subscriber crashes.
+        void on_connection_deleted(
+            in ::DDS::DataWriter writer);
+        };
 
-      /// called when the connection object is cleaned up and
-      /// the reconnect thread exits.
-      /// This hook is added for testing the reconnect thread
-      /// leaking problem when the subscriber crashes.
-      void on_connection_deleted(
-        in ::DDS::DataWriter writer);
-    };
-
-  }; // End of module DCPS
+    }; // End of module DCPS
 }; // End of module DDS
 
 #endif /* DDS_DCPS_PUBLICATION_IDL */

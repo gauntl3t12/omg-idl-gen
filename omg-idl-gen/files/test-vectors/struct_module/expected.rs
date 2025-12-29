@@ -1,13 +1,6 @@
-#[allow(unused_imports)]
-use std::vec::Vec;
-#[allow(unused_imports)]
-use serde_derive::{Serialize, Deserialize};
 
 #[allow(non_snake_case)]
 pub mod A {
-    #[allow(unused_imports)]
-    use std::vec::Vec;
-    #[allow(unused_imports)]
     use serde_derive::{Serialize, Deserialize};
 
     #[allow(dead_code)]

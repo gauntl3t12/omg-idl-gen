@@ -76,6 +76,16 @@ mod tests {
     };
 
     #[test]
+    fn const_str() {
+        testvector_verify("files/test-vectors/const_str/");
+    }
+
+    #[test]
+    fn double_module_depth() {
+        testvector_verify("files/test-vectors/double_module_depth/");
+    }
+
+    #[test]
     fn typedef_long() {
         testvector_verify("files/test-vectors/typedef_long/");
     }

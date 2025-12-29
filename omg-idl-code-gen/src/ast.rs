@@ -4,11 +4,13 @@
 // http://www.apache.org/licenses/LICENSE-2.0>
 use linked_hash_map::LinkedHashMap;
 use serde_derive::Serialize;
-use std::fmt;
+use std::{
+    collections::HashSet,
+    fmt,
+};
 
 const INDENTION: usize = 4;
 const IMPORT_VEC: &str = "use std::vec::Vec;";
-const ATTR_ALLOW_UNUSED_IMPORTS: &str = "#[allow(unused_imports)]";
 const IMPORT_SERDE: &str = "use serde_derive::{Serialize, Deserialize};";
 
 /// Enum representing a basic operator that applies to a single value.
@@ -278,7 +280,7 @@ impl IdlTypeDcl {
     /// Convert the object to a Result<String> for output. The env must have the templates
     /// already loaded.
     pub fn render(
-        &mut self,
+        &self,
         env: &minijinja::Environment,
         level: usize,
     ) -> Result<String, minijinja::Error> {
@@ -362,14 +364,24 @@ impl IdlConstDcl {
     /// Convert the object to a Result<String> for output. The env must have the templates
     /// already loaded.
     pub fn render(
-        &mut self,
+        &self,
         env: &minijinja::Environment,
         level: usize,
     ) -> Result<String, minijinja::Error> {
         let tmpl = env.get_template("const.j2")?;
+
+        // Rust does not support const String's. Convert them to &str
+        let type_str = match &self.typedcl {
+            IdlTypeSpec::StringType(_) |
+            IdlTypeSpec::WideStringType(_) => {
+                "&str".to_owned()
+            },
+            _ => self.typedcl.to_string(),
+        };
+
         tmpl.render(minijinja::context! {
             const_name => self.id,
-            const_type => self.typedcl.to_string(),
+            const_type => type_str,
             const_value => self.value.to_string(),
             indent_level => level
         })
@@ -380,7 +392,6 @@ impl IdlConstDcl {
 #[derive(Clone, Default, Debug)]
 pub struct IdlModule {
     pub id: Option<String>,
-    pub uses: Vec<String>,
     pub modules: LinkedHashMap<String, IdlModule>,
     pub types: LinkedHashMap<String, IdlTypeDcl>,
     pub constants: LinkedHashMap<String, IdlConstDcl>,
@@ -390,7 +401,6 @@ impl IdlModule {
     pub fn new(id: Option<String>) -> IdlModule {
         IdlModule {
             id,
-            uses: Vec::new(),
             modules: LinkedHashMap::default(),
             types: LinkedHashMap::default(),
             constants: LinkedHashMap::default(),
@@ -400,52 +410,56 @@ impl IdlModule {
     /// Convert the object to a Result<String> for output. The env must have the templates
     /// already loaded.
     pub fn render(
-        &mut self,
+        &self,
         env: &minijinja::Environment,
         level: usize,
     ) -> Result<String, minijinja::Error> {
         let mut module_info = String::new();
         let add = if self.id.is_some() { 1 } else { 0 };
 
-        // TODO populate this instead of hardcoded solution
-        let indent = level * INDENTION;
-        for required_use in &self.uses {
+        // TODO use hash map for uniqueness
+        let mut uses = HashSet::new();
+        for typ in self.types.values() {
+            if let IdlTypeDcl(IdlTypeDclKind::TypeDcl(_, IdlTypeSpec::SequenceType(_))) = typ {
+                uses.insert(IMPORT_VEC);
+                break;
+            } else if let IdlTypeDcl(IdlTypeDclKind::StructDcl(_, _)) = typ {
+                uses.insert(IMPORT_SERDE);
+            } else if let IdlTypeDcl(IdlTypeDclKind::EnumDcl(_, _)) = typ {
+                uses.insert(IMPORT_SERDE);
+            } else if let IdlTypeDcl(IdlTypeDclKind::UnionDcl(_, _, _)) = typ {
+                uses.insert(IMPORT_SERDE);
+            }
+        }
+        for cnsts in self.constants.values() {
+            if let IdlTypeSpec::SequenceType(_) = cnsts.typedcl {
+                uses.insert(IMPORT_VEC);
+                break;
+            }
+        }
+
+        for required_use in uses {
             let uses = format!(
-                "{:indent$}{ATTR_ALLOW_UNUSED_IMPORTS}\n{:indent$}{required_use}\n",
-                "", ""
+                "{:indent$}{required_use}\n",
+                "", indent = (level + add) * INDENTION
             );
             module_info.push_str(&uses);
         }
 
-        let use_vec = format!(
-            "{:indent$}{ATTR_ALLOW_UNUSED_IMPORTS}\n{:indent$}{IMPORT_VEC}\n",
-            "",
-            "",
-            indent = (level + add) * INDENTION
-        );
-        let use_serde = format!(
-            "{:indent$}{ATTR_ALLOW_UNUSED_IMPORTS}\n{:indent$}{IMPORT_SERDE}\n",
-            "",
-            "",
-            indent = (level + add) * INDENTION
-        );
-        module_info.push_str(&use_vec);
-        module_info.push_str(&use_serde);
-
-        for typ in self.types.entries() {
-            let rendered = typ.into_mut().render(env, level + add)?;
+        for typ in self.types.values() {
+            let rendered = typ.render(env, level + add)?;
             module_info.push_str(&rendered);
             module_info.push('\n');
         }
 
-        for module in self.modules.entries() {
-            let rendered = module.into_mut().render(env, level + add)?;
+        for module in self.modules.values() {
+            let rendered = module.render(env, level + add)?;
             module_info.push_str(&rendered);
             module_info.push('\n');
         }
 
-        for cnst in self.constants.entries() {
-            let rendered = cnst.into_mut().render(env, level + add)?;
+        for cnst in self.constants.values() {
+            let rendered = cnst.render(env, level + add)?;
             module_info.push_str(&rendered);
             module_info.push('\n');
         }

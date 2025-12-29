@@ -255,14 +255,19 @@ mod tests {
             }
         };
         print_buffer(out.get_ref());
-        let expected_bytes: &[u8] = expected.as_ref();
+        let expected_no_carriage: Vec<u8> = expected
+            .as_bytes()
+            .iter()
+            .filter(|&&b| b != b'\r')
+            .copied()
+            .collect();
         let text_no_carriage: Vec<u8> = out
             .get_ref()
             .iter()
             .filter(|&&b| b != b'\r')
             .copied()
             .collect();
-        assert_eq!(expected_bytes, text_no_carriage.as_slice());
+        assert_eq!(expected_no_carriage.as_slice(), text_no_carriage.as_slice());
     }
 
     fn print_buffer(buf: &Vec<u8>) {

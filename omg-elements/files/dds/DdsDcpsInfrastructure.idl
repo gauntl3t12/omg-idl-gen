@@ -288,24 +288,23 @@ module DDS {
 
     // ----------------------------------------------------------------------
     local interface Entity {
-    //  ReturnCode_t set_qos(
-    //      in EntityQos qos);
-    //  ReturnCode_t get_qos(
-    //      inout EntityQos qos);
-    //  ReturnCode_t set_listener(
-    //      in Listener l,
-    //      in StatusMask mask);
-    //  Listener get_listener();
+        //  ReturnCode_t set_qos(
+        //      in EntityQos qos);
+        //  ReturnCode_t get_qos(
+        //      inout EntityQos qos);
+        //  ReturnCode_t set_listener(
+        //      in Listener l,
+        //      in StatusMask mask);
+        //  Listener get_listener();
 
-      ReturnCode_t enable();
+        ReturnCode_t enable();
 
-      StatusCondition get_statuscondition();
+        StatusCondition get_statuscondition();
 
-      StatusMask get_status_changes();
+        StatusMask get_status_changes();
 
-      InstanceHandle_t get_instance_handle();
+        InstanceHandle_t get_instance_handle();
     };
-
 };
 
 module DDS

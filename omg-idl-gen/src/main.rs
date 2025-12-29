@@ -256,7 +256,9 @@ mod tests {
         };
         print_buffer(out.get_ref());
         let expected_bytes: &[u8] = expected.as_ref();
-        let text_no_carriage: Vec<u8> = out.get_ref().iter()
+        let text_no_carriage: Vec<u8> = out
+            .get_ref()
+            .iter()
             .filter(|&&b| b != b'\r')
             .copied()
             .collect();

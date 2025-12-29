@@ -7,9 +7,9 @@ description = "A command line tool reading OMG IDL and generating corresponding 
 license = "Apache-2.0"
 readme = "README.md"
 keywords = ["OMG", "DDS", "data-centric", "IDL", "generator", "RTPS"]
-documentation = "https://docs.rs/omg-idl"
-homepage = "https://github.com/gauntl3t12/omg-idl"
-repository = "https://github.com/gauntl3t12/omg-idl"
+documentation = "https://docs.rs/omg-idl-gen"
+homepage = "https://github.com/gauntl3t12/omg-idl-gen"
+repository = "https://github.com/gauntl3t12/omg-idl-gen"
 exclude = [
     "docs/*",
 ]

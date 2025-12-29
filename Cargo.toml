@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = [ "omg-idl-code-gen", "omg-elements", "omg-idl-grammar", "omg-idl"]
+members = [ "omg-idl-code-gen", "omg-elements", "omg-idl-grammar", "omg-idl-gen"]
 
 [profile.release]
 opt-level = "z"

@@ -18,22 +18,20 @@ module DDS {
 
     // ----------------------------------------------------------------------
     local interface TopicDescription {
-                string get_type_name();
-                string get_name();
-                DomainParticipant get_participant();
-                };
+        string get_type_name();
+        string get_name();
+        DomainParticipant get_participant();
+    };
 
     local interface TopicListener : Listener {
-                void on_inconsistent_topic(
-                        in Topic the_topic,
-                        in InconsistentTopicStatus status);
-                };
+        void on_inconsistent_topic(
+                in Topic the_topic,
+                in InconsistentTopicStatus status);
+    };
 
     local interface Topic : Entity, TopicDescription {
-        ReturnCode_t set_qos(
-            in TopicQos qos);
-        ReturnCode_t get_qos(
-            inout TopicQos qos);
+        ReturnCode_t set_qos(in TopicQos qos);
+        ReturnCode_t get_qos(inout TopicQos qos);
         ReturnCode_t set_listener(
             in TopicListener a_listener,
             in StatusMask mask);
@@ -42,7 +40,6 @@ module DDS {
         ReturnCode_t get_inconsistent_topic_status(
             inout InconsistentTopicStatus a_status);
     };
-
 
 #ifndef DDS_NO_CONTENT_FILTERED_TOPIC
 
@@ -68,12 +65,12 @@ module DDS {
 #endif
 
     local interface TypeSupport {
-                         ReturnCode_t register_type(
-                                 in DomainParticipant domain,
-                                 in string type_name);
+        ReturnCode_t register_type(
+            in DomainParticipant domain,
+            in string type_name);
 
-                         string get_type_name ();
-                };
+        string get_type_name ();
+    };
 };
 
 #endif /* DDS_DCPS_TOPIC_IDL */

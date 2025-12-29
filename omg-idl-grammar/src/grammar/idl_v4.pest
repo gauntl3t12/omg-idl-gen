@@ -97,7 +97,7 @@ definition = {
     | template_module_dcl ~ ";"
     | template_module_inst ~ ";"
     | annotation_dcl ~ ";"
-    | include_directive 
+    | include_directive
     | other_directive
 }
 // (3)

@@ -14,7 +14,7 @@ repository = "https://github.com/gauntl3t12/omg-idl"
 
 [dependencies]
 pest = "^1.0"
-omg-idl-grammar = { path = "../omg-idl-grammar", version = "^0.2" }
+omg-idl-grammar = { path = "../omg-idl-grammar" }
 log = { version = "0.4", features = ["std", "serde"] }
 linked-hash-map = "^0.5"
 minijinja-embed = "2.14.0"

@@ -13,7 +13,7 @@ homepage = "https://github.com/gauntl3t12/omg-idl"
 repository = "https://github.com/gauntl3t12/omg-idl"
 
 [dependencies]
-pest = "^1.0"
+pest = "^2.8.5"
 omg-idl-grammar = { path = "../omg-idl-grammar", version = "0.1" }
 log = { version = "0.4", features = ["std", "serde"] }
 linked-hash-map = "^0.5"

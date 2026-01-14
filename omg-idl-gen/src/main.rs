@@ -70,219 +70,116 @@ mod tests {
     use omg_idl_code_gen::{generate_with_search_path, Configuration};
     use std::{
         fs::File,
-        io::{Cursor, Read},
+        io::{Seek, SeekFrom, Read, Write},
         path::Path,
         str,
     };
+    use tempfile::Builder;
+    use trybuild;
 
     #[test]
-    fn const_str() {
-        testvector_verify("files/test-vectors/const_str/");
-    }
+    fn expected_mappings() {
+        let test_dirs = [
+            "files/test-vectors/const_str/",
+            "files/test-vectors/double_module_depth/",
+            "files/test-vectors/typedef_long/",
+            "files/test-vectors/typedef_long_long/",
+            "files/test-vectors/typedef_short/",
+            "files/test-vectors/typedef_octet/",
+            "files/test-vectors/typedef_unsigned_short/",
+            "files/test-vectors/typedef_unsigned_long",
+            "files/test-vectors/typedef_unsigned_long_long",
+            "files/test-vectors/typedef_char",
+            "files/test-vectors/typedef_wchar",
+            "files/test-vectors/typedef_string",
+            "files/test-vectors/typedef_wstring",
+            "files/test-vectors/typedef_string_bounded",
+            "files/test-vectors/typedef_wstring_bounded",
+            "files/test-vectors/typedef_sequence",
+            "files/test-vectors/typedef_array_dim_1",
+            "files/test-vectors/typedef_array_dim_2",
+            "files/test-vectors/struct_members",
+            "files/test-vectors/enum_variants",
+            "files/test-vectors/struct_module",
+            "files/test-vectors/const_op_and",
+            "files/test-vectors/const_op_add",
+            "files/test-vectors/const_op_sub",
+            "files/test-vectors/const_op_lshift",
+            "files/test-vectors/const_op_rshift",
+            "files/test-vectors/const_op_or",
+            "files/test-vectors/const_op_xor",
+            "files/test-vectors/const_op_mul",
+            "files/test-vectors/const_op_div",
+            "files/test-vectors/const_op_mod",
+            "files/test-vectors/include_directive/",
+            "files/test-vectors/union_members",
+        ];
 
-    #[test]
-    fn double_module_depth() {
-        testvector_verify("files/test-vectors/double_module_depth/");
-    }
-
-    #[test]
-    fn typedef_long() {
-        testvector_verify("files/test-vectors/typedef_long/");
-    }
-
-    #[test]
-    fn typedef_long_long() {
-        testvector_verify("files/test-vectors/typedef_long_long/");
-    }
-
-    #[test]
-    fn typedef_short() {
-        testvector_verify("files/test-vectors/typedef_short/");
-    }
-
-    #[test]
-    fn typedef_octet() {
-        testvector_verify("files/test-vectors/typedef_octet/");
-    }
-
-    #[test]
-    fn typedef_unsigned_short() {
-        testvector_verify("files/test-vectors/typedef_unsigned_short/");
-    }
-
-    #[test]
-    fn typedef_unsigned_long() {
-        testvector_verify("files/test-vectors/typedef_unsigned_long");
-    }
-
-    #[test]
-    fn typedef_unsigned_long_long() {
-        testvector_verify("files/test-vectors/typedef_unsigned_long_long");
-    }
-
-    #[test]
-    fn typedef_char() {
-        testvector_verify("files/test-vectors/typedef_char");
-    }
-
-    #[test]
-    fn typedef_wchar() {
-        testvector_verify("files/test-vectors/typedef_wchar");
-    }
-
-    #[test]
-    fn typedef_string() {
-        testvector_verify("files/test-vectors/typedef_string");
-    }
-
-    #[test]
-    fn typedef_wstring() {
-        testvector_verify("files/test-vectors/typedef_wstring");
-    }
-
-    #[test]
-    fn typedef_string_bounded() {
-        testvector_verify("files/test-vectors/typedef_string_bounded");
-    }
-
-    #[test]
-    fn typedef_wstring_bounded() {
-        testvector_verify("files/test-vectors/typedef_wstring_bounded");
-    }
-
-    #[test]
-    fn typedef_sequence() {
-        testvector_verify("files/test-vectors/typedef_sequence");
-    }
-
-    #[test]
-    fn typedef_array_dim_1() {
-        testvector_verify("files/test-vectors/typedef_array_dim_1");
-    }
-
-    #[test]
-    fn typedef_array_dim_2() {
-        testvector_verify("files/test-vectors/typedef_array_dim_2");
-    }
-
-    #[test]
-    fn struct_members() {
-        testvector_verify("files/test-vectors/struct_members");
-    }
-
-    #[test]
-    fn enum_variants() {
-        testvector_verify("files/test-vectors/enum_variants");
-    }
-
-    #[test]
-    fn struct_module() {
-        testvector_verify("files/test-vectors/struct_module");
-    }
-
-    #[test]
-    fn const_op_and() {
-        testvector_verify("files/test-vectors/const_op_and");
-    }
-
-    #[test]
-    fn const_op_add() {
-        testvector_verify("files/test-vectors/const_op_add");
-    }
-
-    #[test]
-    fn const_op_sub() {
-        testvector_verify("files/test-vectors/const_op_sub");
-    }
-
-    #[test]
-    fn const_op_lshift() {
-        testvector_verify("files/test-vectors/const_op_lshift");
-    }
-
-    #[test]
-    fn const_op_rshift() {
-        testvector_verify("files/test-vectors/const_op_rshift");
-    }
-
-    #[test]
-    fn const_op_or() {
-        testvector_verify("files/test-vectors/const_op_or");
-    }
-
-    #[test]
-    fn const_op_xor() {
-        testvector_verify("files/test-vectors/const_op_xor");
-    }
-
-    #[test]
-    fn const_op_mul() {
-        testvector_verify("files/test-vectors/const_op_mul");
-    }
-
-    #[test]
-    fn const_op_div() {
-        testvector_verify("files/test-vectors/const_op_div");
-    }
-
-    #[test]
-    fn const_op_mod() {
-        testvector_verify("files/test-vectors/const_op_mod");
-    }
-
-    #[test]
-    fn include_directive() {
-        testvector_verify("files/test-vectors/include_directive/");
-    }
-
-    #[test]
-    fn union_members() {
-        testvector_verify("files/test-vectors/union_members");
-    }
-
-    fn testvector_verify(testvector: &str) {
-        let expected_path = Path::new(testvector).join("expected.rs");
-
-        let mut expected_file = match File::open(expected_path) {
-            Ok(file) => file,
-            Err(err) => {
-                eprintln!("{}", err);
-                panic!();
+        for test_dir in test_dirs {
+            println!("Testing directory: {test_dir}");
+            let mut tmp_file = Builder::new().suffix(".rs").tempfile().unwrap();
+            testvector_verify(test_dir, tmp_file.as_file_mut());
+            // TestCases must go out of scope before tmp_file goes out of scope
+            // to ensure the test is executed prior to the file being deleted.
+            {
+                let t = trybuild::TestCases::new();
+                t.pass(tmp_file.path())
             }
-        };
-        let mut expected = String::new();
-        assert!(expected_file.read_to_string(&mut expected).is_ok());
 
-        let config = Configuration::new(Path::new(testvector), Path::new("input.idl"), false);
+        }
 
-        // Create fake "file"
-        let mut out = Cursor::new(Vec::new());
-        match generate_with_search_path(&mut out, &config) {
-            Ok(_) => (),
-            Err(err) => {
-                eprint!("parse error {:?}", err);
-                panic!();
-            }
+    }
+
+    fn testvector_verify(testvector: &str, tmp_file: &mut File) {
+        let expected = {
+            let expected_path = Path::new(testvector).join("expected.rs");
+            let mut expected_file = match File::open(expected_path) {
+                Ok(file) => file,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    panic!();
+                }
+            };
+            let mut expected = String::new();
+            assert!(expected_file.read_to_string(&mut expected).is_ok());
+            expected
         };
-        print_buffer(out.get_ref());
+
+        let generated = {
+            let config = Configuration::new(Path::new(testvector), Path::new("input.idl"), false);
+            match generate_with_search_path(tmp_file, &config) {
+                Ok(_) => (),
+                Err(err) => {
+                    eprint!("parse error {:?}", err);
+                    panic!();
+                }
+            };
+
+            let _ = tmp_file.seek(SeekFrom::Start(0));
+            let mut generated = String::new();
+            assert!(tmp_file.read_to_string(&mut generated).is_ok());
+
+            let main_str = "fn main() {}";
+            let _ = write!(tmp_file, "{main_str}");
+
+            let _ = tmp_file.seek(SeekFrom::Start(0));
+            generated
+        };
+
+        println!("-------------\n{generated}");
+
         let expected_no_carriage: Vec<u8> = expected
             .as_bytes()
             .iter()
             .filter(|&&b| b != b'\r')
             .copied()
             .collect();
-        let text_no_carriage: Vec<u8> = out
-            .get_ref()
+        let text_no_carriage: Vec<u8> = generated
+            .as_bytes()
             .iter()
             .filter(|&&b| b != b'\r')
             .copied()
             .collect();
         assert_eq!(expected_no_carriage.as_slice(), text_no_carriage.as_slice());
-    }
-
-    fn print_buffer(buf: &Vec<u8>) {
-        let content = str::from_utf8(&buf).unwrap();
-
-        println!("{}", content);
     }
 }

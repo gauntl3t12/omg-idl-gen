@@ -757,6 +757,7 @@ fn generate_with_loader<W: Write, L: IdlLoader>(
         .root_module
         .render(&env, 0)
         .map_err(|_| IdlError::InternalError)?;
+
     write!(out, "{root_module_text}").map_err(|_| IdlError::InternalError)
 }
 

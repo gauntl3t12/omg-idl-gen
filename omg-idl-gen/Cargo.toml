@@ -23,3 +23,8 @@ clap = { version = "4.5.53", features = ["cargo"] }
 [dev-dependencies]
 # TODO: should be dependency of omg-message
 omg-elements = { path = "../omg-elements", version = "0.1" }
+trybuild = "1.0"
+tempfile = "3.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_derive = "1.0"
+

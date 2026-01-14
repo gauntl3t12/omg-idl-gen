@@ -21,5 +21,5 @@ fn main() -> Result<(), Error> {
     let config = Configuration::new(Path::new(IDL_DIR), Path::new(IDL_INFILE), false);
     let mut out = File::create(dest_path)?;
 
-    generate_with_search_path(&mut out, &config).map_err(|_| Error::from(ErrorKind::NotFound))
+    generate_with_search_path(&mut out, &config).map_err(|e| { eprintln!("{:#?}", e); Error::from(ErrorKind::NotFound) })
 }

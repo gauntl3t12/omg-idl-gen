@@ -1,1 +1,8 @@
-struct Foo { long m_l1,m_l2; double m_d; };
+struct Foo {
+    // long
+    long m_l1,m_l2;
+    /*
+     * double
+     */
+     double m_d;
+};

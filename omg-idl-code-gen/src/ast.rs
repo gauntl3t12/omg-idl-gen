@@ -228,7 +228,7 @@ impl fmt::Display for IdlTypeSpec {
             IdlTypeSpec::ArrayType(typ_expr, dim_expr_list) => {
                 let dim_list_str = dim_expr_list
                     .iter()
-                    .map(|expr| format!(";{}]", expr))
+                    .map(|expr| format!(";{} as usize]", expr))
                     .collect::<String>();
                 &format!(
                     "{}{}{dim_list_str}",

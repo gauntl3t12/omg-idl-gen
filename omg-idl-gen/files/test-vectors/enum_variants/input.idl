@@ -1,1 +1,10 @@
-enum Foo { VARIANT0, VARIANT1, VARIANT2 };
+enum Foo {
+    // comment 0
+    VARIANT0,
+    /*
+     * Comment 1
+     */
+    VARIANT1,
+    VARIANT2
+
+};

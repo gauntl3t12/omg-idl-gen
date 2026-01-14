@@ -20,39 +20,34 @@
 //
 //
 
-alpha = { 'a'..'z' | 'A'..'Z' }
-digit = { '0'..'9' }
-octal_digit = { '0'..'7' }
 hex_digit = {'0'..'9' | 'a'..'f' | 'A'..'F'}
 escape = ${ "\\" ~ ("n" | "t" | "v" | "b" | "r" | "f" | "a" | "\\" | "?" | "'" | "\"") | octal_escape | hex_escape | unicode_escape }
-octal_escape = ${ "\\" ~ octal_digit ~ octal_digit? ~ octal_digit? }
-hex_escape = ${ "\\" ~ "x" ~ hex_digit ~ hex_digit? }
-unicode_escape = ${ "\\" ~ "u" ~ hex_digit{1,4} }
+octal_escape = ${ "\\" ~ ASCII_OCT_DIGIT ~ ASCII_OCT_DIGIT? ~ ASCII_OCT_DIGIT? }
+hex_escape = ${ "\\" ~ "x" ~ ASCII_HEX_DIGIT ~ ASCII_HEX_DIGIT? }
+unicode_escape = ${ "\\" ~ "u" ~ ASCII_HEX_DIGIT{1,4} }
 
-
-newline = _{ "\n" | "\r\n" }
-whitespace = _{ " " | "\t" | newline }
-path_spec = @{ (!">" ~!"\"" ~ any)+ }
+path_spec = @{ (!">" ~!"\"" ~ ANY)+ }
 include_directive = !{ "#" ~ "include" ~ (("<" ~ path_spec ~ ">") | ("\"" ~ path_spec ~ "\"")) }
-other_directive = @{ "#" ~ (!newline ~ any)* }
-block_comment = @{ "/*" ~ (!"*/" ~ any)* ~ "*/" }
-line_comment = @{ "//" ~ (!newline ~ any)* }
-comment = ${ block_comment | line_comment }
+other_directive = @{ "#" ~ (!NEWLINE ~ ANY)* }
+block_comment = @{ "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
+line_comment = @{ "//" ~ (!NEWLINE ~ ANY)* }
+COMMENT = _{ block_comment | line_comment }
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+SKIP = _{ WHITESPACE | COMMENT }
 
-
-identifier = @{ (alpha | "_") ~ ("_" | alpha | digit)* }
-character_literal = @{ "'" ~ (!"'" ~ (escape | any)) ~ "'" }
-string_literal = @{ "\"" ~ (!"\"" ~ (escape | any))* ~ "\"" }
-wide_character_literal = @{ "L'" ~ (!"'" ~ (escape | any)) ~ "'" }
-wide_string_literal = @{ "L\"" ~ (!"\"" ~ (escape | any))* ~ "\"" }
+identifier = @{ (ASCII_ALPHA | "_") ~ ("_" | ASCII_ALPHA | ASCII_DIGIT)* }
+character_literal = @{ "'" ~ (!"'" ~ (escape | ANY)) ~ "'" }
+string_literal = @{ "\"" ~ (!"\"" ~ (escape | ANY))* ~ "\"" }
+wide_character_literal = @{ "L'" ~ (!"'" ~ (escape | ANY)) ~ "'" }
+wide_string_literal = @{ "L\"" ~ (!"\"" ~ (escape | ANY))* ~ "\"" }
 integer_literal = ${
     hex_integer_literal
     | octal_integer_literal
     | decimal_integer_literal
 }
-decimal_integer_literal = @{ digit+ }
-octal_integer_literal = @{ "0" ~ octal_digit+ }
-hex_integer_literal = @{ ("0x" | "0X") ~ hex_digit+ }
+decimal_integer_literal = @{ ASCII_DIGIT+ }
+octal_integer_literal = @{ "0" ~ ASCII_OCT_DIGIT+ }
+hex_integer_literal = @{ ("0x" | "0X") ~ ASCII_HEX_DIGIT+ }
 fixed_pt_literal = ${ floating_pt_literal }
 floating_pt_literal = ${
     integral_part ~ "." ~ fractional_part ~ exponent? ~ float_suffix?
@@ -60,9 +55,9 @@ floating_pt_literal = ${
     | integral_part ~ exponent ~ float_suffix?
     | integral_part ~ float_suffix
 }
-integral_part =  @{ digit+ }
-fractional_part =  @{ digit+ }
-exponent = ${ ("e" | "E") ~ ("+" | "-")? ~ digit+ }
+integral_part =  @{ ASCII_DIGIT+ }
+fractional_part =  @{ ASCII_DIGIT+ }
+exponent = ${ ("e" | "E") ~ ("+" | "-")? ~ ASCII_DIGIT+ }
 float_suffix = ${ ("f" | "F" | "d" | "D") }
 
 
@@ -77,7 +72,7 @@ float_suffix = ${ ("f" | "F" | "d" | "D") }
 // From Building Block Core Data Types:
 ///////////////////////////////////////////////////////////////////////////////
 // (1)
-specification = { soi ~ definition* ~ eoi}
+specification = { SOI ~ definition* ~ EOI}
 // (2) (71) (98) (111) (184) (208)
 definition = {
     module_dcl ~ ";"
@@ -304,7 +299,14 @@ struct_dcl = {
     | struct_forward_dcl
 }
 // (46) (195)
-struct_def = { "struct" ~ identifier ~ (":" ~ scoped_name)? ~ "{" ~ member* ~ "}" }
+struct_def = {
+    "struct" ~ SKIP*
+    ~ identifier ~ SKIP*
+    ~ ( ":" ~ SKIP* ~ scoped_name ~ SKIP* )?
+    ~ "{" ~ SKIP*
+    ~ member*
+    ~ "}"
+}
 // (47)
 member = { type_spec ~ declarators ~ ";" }
 // (48)
@@ -339,7 +341,11 @@ element_spec = { type_spec ~ declarator }
 // (56)
 union_forward_dcl = { "union" ~ identifier }
 // (57)
-enum_dcl = { "enum" ~ identifier ~ "{" ~ enumerator ~ ("," ~ enumerator)* ~ ","? ~ "}" }
+enum_dcl = {
+    "enum" ~ SKIP* ~ identifier ~ SKIP* ~ "{" ~
+    SKIP* ~ enumerator ~ (SKIP* ~ "," ~ SKIP* ~ enumerator)* ~
+    SKIP* ~ ","? ~ SKIP* ~ "}"
+}
 // (58)
 enumerator = { identifier }
 // (59)
@@ -493,9 +499,12 @@ value_header = { value_kind ~ identifier ~ value_inheritance_spec? }
 value_kind = { "valuetype" | "custom" ~ "valuetype" }
 // (103) (130)
 value_inheritance_spec = {
-    (":" ~ value_name)? ~ ("supports" ~ interface_name)?
-    | ":" ~ "truncatable"? ~ value_name ~ ("," ~ value_name)* ~ ("supports" ~ interface_name ~ ("," ~ interface_name)* )?
-
+    ":" ~ (
+        ("truncatable")? ~ value_name ~ ("," ~ value_name)*
+        ~ ("supports" ~ interface_name ~ ("," ~ interface_name)*)?
+        |
+        value_name ~ ("supports" ~ interface_name)?
+    )?
 }
 // (104)
 value_name = { scoped_name }

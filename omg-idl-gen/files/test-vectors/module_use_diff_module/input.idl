@@ -1,0 +1,14 @@
+module A {
+    struct Foo {
+        long m_l1,m_l2;
+        double m_d;
+    };
+
+    const long length = 20;
+};
+
+module B {
+    typedef sequence<::A::Foo> FooSeq;
+
+    typedef ::A::Foo Foo[::A::length];
+};

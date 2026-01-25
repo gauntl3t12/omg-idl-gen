@@ -70,11 +70,11 @@ mod tests {
     use omg_idl_code_gen::{generate_with_search_path, Configuration};
     use std::{
         fs::File,
-        io::{Seek, SeekFrom, Read, Write},
+        io::{Read, Seek, SeekFrom, Write},
         path::Path,
         str,
     };
-    use tempfile::Builder;
+    use tempfile::{Builder, NamedTempFile};
     use trybuild;
 
     #[test]
@@ -82,6 +82,7 @@ mod tests {
         let test_dirs = [
             "files/test-vectors/const_str/",
             "files/test-vectors/double_module_depth/",
+            "files/test-vectors/module_use_diff_module/",
             "files/test-vectors/typedef_long/",
             "files/test-vectors/typedef_long_long/",
             "files/test-vectors/typedef_short/",
@@ -115,19 +116,19 @@ mod tests {
             "files/test-vectors/union_members",
         ];
 
-        for test_dir in test_dirs {
-            println!("Testing directory: {test_dir}");
-            let mut tmp_file = Builder::new().suffix(".rs").tempfile().unwrap();
-            testvector_verify(test_dir, tmp_file.as_file_mut());
-            // TestCases must go out of scope before tmp_file goes out of scope
-            // to ensure the test is executed prior to the file being deleted.
-            {
-                let t = trybuild::TestCases::new();
-                t.pass(tmp_file.path())
+        // TestCases must go out of scope before tmp_file goes out of scope
+        // to ensure the test is executed prior to the file(s) being deleted.
+        let mut test_files: Vec<NamedTempFile> = Vec::new();
+        {
+            let t = trybuild::TestCases::new();
+            for test_dir in test_dirs {
+                println!("Testing directory: {test_dir}");
+                let mut tmp_file = Builder::new().suffix(".rs").tempfile().unwrap();
+                testvector_verify(test_dir, tmp_file.as_file_mut());
+                t.pass(tmp_file.path());
+                test_files.push(tmp_file);
             }
-
         }
-
     }
 
     fn testvector_verify(testvector: &str, tmp_file: &mut File) {

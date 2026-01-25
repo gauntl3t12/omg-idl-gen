@@ -21,6 +21,7 @@ minijinja-embed = "2.14.0"
 minijinja = "2.14.0"
 serde_derive = "1.0.228"
 serde = "1.0.228"
+thiserror = "2.0.18"
 
 [build-dependencies]
 minijinja-embed = "2.14.0"

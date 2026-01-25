@@ -1,15 +1,17 @@
 use serde_derive::{Serialize, Deserialize};
 
-#[allow(dead_code)]
-#[allow(non_camel_case_types)]
-#[derive(Serialize, Deserialize)]
-#[derive(Clone, Debug)]
+#[allow(dead_code, non_camel_case_types)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Foo {
+    #[allow(non_snake_case)]
     pub m_l1: i32,
+    #[allow(non_snake_case)]
     pub m_l2: i32,
+    #[allow(non_snake_case)]
     pub m_d: f64,
 }
 
+#[allow(dead_code)]
 impl Foo {
 
     pub fn new(m_l1: i32, m_l2: i32, m_d: f64, ) -> Self {

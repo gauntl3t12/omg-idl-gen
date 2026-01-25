@@ -15,6 +15,7 @@ repository = "https://github.com/gauntl3t12/omg-idl"
 [dependencies]
 serde = "1.0"
 serde_derive = "1.0"
+serde_arrays = "0.2.0"
 
 [build-dependencies]
 omg-idl-code-gen = { path = "../omg-idl-code-gen", version = "0.1" }

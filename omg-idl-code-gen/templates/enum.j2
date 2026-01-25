@@ -1,8 +1,6 @@
 {% set indent = "    " %}{% set current_indent = indent * (indent_level if indent_level is defined else 0) %}
-{{ current_indent }}#[allow(dead_code)]
-{{ current_indent }}#[allow(non_camel_case_types)]
-{{ current_indent }}#[derive(Serialize, Deserialize)]
-{{ current_indent }}#[derive(Clone, Debug)]
+{{ current_indent }}#[allow(dead_code, non_camel_case_types)]
+{{ current_indent }}#[derive(Serialize, Deserialize, Clone, Debug)]
 {{ current_indent }}pub enum {{ enum_name }} {
 {% for variant in variants %}{{ current_indent }}    {{ variant }},{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
 {{ current_indent }}}

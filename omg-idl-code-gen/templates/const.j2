@@ -1,4 +1,3 @@
 {% set indent = "    " %}{% set current_indent = indent * (indent_level if indent_level is defined else 0) %}
-{{ current_indent }}#[allow(dead_code)]
-{{ current_indent }}#[allow(non_upper_case_globals)]
+{{ current_indent }}#[allow(dead_code, non_upper_case_globals)]
 {{ current_indent }}pub const {{ const_name }}: {{ const_type }} = {{ const_value }};

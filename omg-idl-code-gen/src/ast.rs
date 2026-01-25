@@ -205,40 +205,48 @@ pub enum IdlTypeSpec {
 impl fmt::Display for IdlTypeSpec {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let value_expr = match self {
-            IdlTypeSpec::F32Type => "f32",
-            IdlTypeSpec::F64Type => "f64",
-            IdlTypeSpec::F128Type => "f128",
-            IdlTypeSpec::I16Type => "i16",
-            IdlTypeSpec::I32Type => "i32",
-            IdlTypeSpec::I64Type => "i64",
-            IdlTypeSpec::U16Type => "u16",
-            IdlTypeSpec::U32Type => "u32",
-            IdlTypeSpec::U64Type => "u64",
-            IdlTypeSpec::CharType => "char",
-            IdlTypeSpec::WideCharType => "char",
-            IdlTypeSpec::BooleanType => "bool",
-            IdlTypeSpec::OctetType => "u8",
-            IdlTypeSpec::StringType(None) => "String",
-            IdlTypeSpec::WideStringType(None) => "String",
+            IdlTypeSpec::F32Type => Ok("f32".to_string()),
+            IdlTypeSpec::F64Type => Ok("f64".to_string()),
+            IdlTypeSpec::F128Type => Ok("f128".to_string()),
+            IdlTypeSpec::I16Type => Ok("i16".to_string()),
+            IdlTypeSpec::I32Type => Ok("i32".to_string()),
+            IdlTypeSpec::I64Type => Ok("i64".to_string()),
+            IdlTypeSpec::U16Type => Ok("u16".to_string()),
+            IdlTypeSpec::U32Type => Ok("u32".to_string()),
+            IdlTypeSpec::U64Type => Ok("u64".to_string()),
+            IdlTypeSpec::CharType => Ok("char".to_string()),
+            IdlTypeSpec::WideCharType => Ok("char".to_string()),
+            IdlTypeSpec::BooleanType => Ok("bool".to_string()),
+            IdlTypeSpec::OctetType => Ok("u8".to_string()),
+            IdlTypeSpec::StringType(None) => Ok("String".to_string()),
+            IdlTypeSpec::WideStringType(None) => Ok("String".to_string()),
             // TODO implement String/Sequence bounds
-            IdlTypeSpec::StringType(_) => "String",
+            IdlTypeSpec::StringType(_) => Ok("String".to_string()),
             // TODO implement String/Sequence bounds for serializer and deserialzer
-            IdlTypeSpec::WideStringType(_) => "String",
-            IdlTypeSpec::SequenceType(typ_expr) => &format!("Vec<{}>", typ_expr.as_ref()),
+            IdlTypeSpec::WideStringType(_) => Ok("String".to_string()),
+            IdlTypeSpec::SequenceType(typ_expr) => Ok(format!("Vec<{}>", typ_expr.as_ref())),
             IdlTypeSpec::ArrayType(typ_expr, dim_expr_list) => {
                 let dim_list_str = dim_expr_list
                     .iter()
-                    .map(|expr| format!(";{} as usize]", expr))
-                    .collect::<String>();
-                &format!(
+                    .map(|expr| match expr {
+                        IdlValueExpr::DecLiteral(_)
+                        | IdlValueExpr::HexLiteral(_)
+                        | IdlValueExpr::OctLiteral(_)
+                        | IdlValueExpr::Expr(_, _)
+                        | IdlValueExpr::BinaryOp(_, _) => Ok(format!(";{}_usize]", expr)),
+                        IdlValueExpr::ScopedName(_) => Ok(format!(";{} as usize]", expr)),
+                        _ => Err(fmt::Error),
+                    })
+                    .collect::<Result<String, fmt::Error>>()?;
+                Ok(format!(
                     "{}{}{dim_list_str}",
                     "[".repeat(dim_expr_list.len()),
                     typ_expr
-                )
+                ))
             }
-            IdlTypeSpec::ScopedName(name) => &name.to_string(),
+            IdlTypeSpec::ScopedName(name) => Ok(name.to_string()),
             _ => unimplemented!(),
-        };
+        }?;
         write!(f, "{value_expr}")
     }
 }
@@ -263,6 +271,7 @@ pub struct IdlTypeDcl(pub IdlTypeDclKind);
 struct IdlStructField {
     name: String,
     type_str: String,
+    directive: String,
 }
 
 /// Data storage to align with Jinja (IdlSwitch)
@@ -294,9 +303,22 @@ impl IdlTypeDcl {
                 let tmpl = env.get_template("struct.j2")?;
                 let fields = type_spec
                     .iter()
-                    .map(|field| IdlStructField {
-                        name: field.id.clone(),
-                        type_str: field.type_spec.to_string(),
+                    .map(|field| {
+                        // @todo this doesn't work because the type needs to be determined. But if
+                        //       the type is a ScopedName it can also be an array
+                        if let IdlTypeSpec::ArrayType(_, _) = field.type_spec {
+                            IdlStructField {
+                                name: field.id.clone(),
+                                type_str: field.type_spec.to_string(),
+                                directive: "#[serde(with = \"serde_arrays\")]".to_string(),
+                            }
+                        } else {
+                            IdlStructField {
+                                name: field.id.clone(),
+                                type_str: field.type_spec.to_string(),
+                                directive: String::new(),
+                            }
+                        }
                     })
                     .collect::<Vec<IdlStructField>>();
 

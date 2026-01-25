@@ -99,6 +99,16 @@ Note: Only switch types "switch (long)" is supported yet.
 | /* not yet, to be developed */<br>union Result switch (long) {<br>&ensp;case None: void _dummy;<br>&ensp;case Some: T t<br>}; | /* not yet, to be developed */<br>pub enum Result\<T> {<br>&ensp;None,<br>&ensp;Some(T),<br>}  |
 **
 
+## Known Issues
+
+The current implementation does not have a way to determine if an array is too large for the serde library to handle it natively. If this occurs in your environment, it's recommended to add the following trait to your array.
+
+```rust
+#[serde(with = "serde_arrays")]
+```
+
+## License
+
 [licence-badge]: https://img.shields.io/badge/License-Apache%202.0-blue.svg
 [licence-url]: LICENSE-APACHE
 

@@ -1,7 +1,4 @@
 
-#[allow(dead_code, non_camel_case_types)]
-pub type FooSeq = [i32;16_usize];
-
 #[allow(non_snake_case)]
 pub mod A {
     use serde_derive::{Serialize, Deserialize};
@@ -15,19 +12,16 @@ pub mod A {
         pub m_l2: i32,
         #[allow(non_snake_case)]
         pub m_d: f64,
-        #[allow(non_snake_case)]
-        pub foo_seq: crate::FooSeq,
     }
 
     #[allow(dead_code)]
     impl Foo {
 
-        pub fn new(m_l1: i32, m_l2: i32, m_d: f64, foo_seq: crate::FooSeq, ) -> Self {
+        pub fn new(m_l1: i32, m_l2: i32, m_d: f64, ) -> Self {
             Self {
                 m_l1,
                 m_l2,
                 m_d,
-                foo_seq,
             }
         }
 
@@ -55,14 +49,21 @@ pub mod A {
             self.m_d = value;
         }
 
-        pub fn foo_seq(&self) -> &crate::FooSeq {
-            &self.foo_seq
-        }
-
-        pub fn set_foo_seq(&mut self, value: crate::FooSeq) {
-            self.foo_seq = value;
-        }
-
     }
+
+    #[allow(dead_code, non_upper_case_globals)]
+    pub const length: i32 = 20;
+
+}
+
+#[allow(non_snake_case)]
+pub mod B {
+    use std::vec::Vec;
+
+    #[allow(dead_code, non_camel_case_types)]
+    pub type FooSeq = Vec<crate::A::Foo>;
+
+    #[allow(dead_code, non_camel_case_types)]
+    pub type Foo = [crate::A::Foo;crate::A::length as usize];
 
 }

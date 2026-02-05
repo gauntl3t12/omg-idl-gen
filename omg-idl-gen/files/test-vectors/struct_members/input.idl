@@ -4,5 +4,5 @@ struct Foo {
     /*
      * double
      */
-     double m_d;
+    double m_d;
 };

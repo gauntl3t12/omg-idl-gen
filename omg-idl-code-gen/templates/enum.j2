@@ -5,6 +5,7 @@
 {% for variant in variants %}{{ current_indent }}    {{ variant }},{% if not loop.last %}{{ '\n' }}{% endif %}{% endfor %}
 {{ current_indent }}}
 
+{{ current_indent }}#[allow(non_camel_case_types)]
 {{ current_indent }}#[derive(Debug, PartialEq, Eq)]
 {{ current_indent }}pub struct {{ enum_name }}Error;
 

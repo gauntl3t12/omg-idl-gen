@@ -1,6 +1,6 @@
 [package]
 name = "omg-elements"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Frank Rehberger <frehberg@gmail.com>", "Bryan Conn <coding@bryan-conn.org>"]
 edition = "2021"
 rust-version = "1.84.1"
@@ -18,4 +18,4 @@ serde_derive = "1.0"
 serde_arrays = "0.2.0"
 
 [build-dependencies]
-omg-idl-code-gen = { path = "../omg-idl-code-gen", version = "0.2" }
+omg-idl-code-gen = { path = "../omg-idl-code-gen", version = "0.2.1" }

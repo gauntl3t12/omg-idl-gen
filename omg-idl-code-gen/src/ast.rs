@@ -433,12 +433,10 @@ impl IdlModule {
         let mut module_info = String::new();
         let add = if self.id.is_some() { 1 } else { 0 };
 
-        // TODO use hash map for uniqueness
         let mut uses = HashSet::new();
         for typ in self.types.values() {
             if let IdlTypeDcl(IdlTypeDclKind::TypeDcl(_, IdlTypeSpec::SequenceType(_))) = typ {
                 uses.insert(IMPORT_VEC);
-                break;
             } else if let IdlTypeDcl(IdlTypeDclKind::StructDcl(_, _)) = typ {
                 uses.insert(IMPORT_SERDE);
             } else if let IdlTypeDcl(IdlTypeDclKind::EnumDcl(_, _)) = typ {

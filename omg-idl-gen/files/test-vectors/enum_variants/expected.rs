@@ -8,6 +8,7 @@ pub enum Foo {
     VARIANT2,
 }
 
+#[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Eq)]
 pub struct FooError;
 

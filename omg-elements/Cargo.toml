@@ -8,9 +8,9 @@ description = "Core message data structures generated from OMG IDL."
 license = "Apache-2.0"
 readme = "README.md"
 keywords = ["OMG", "DDS", "IDL", "generator", "RTPS"]
-documentation = "https://docs.rs/omg-idl"
-homepage = "https://github.com/gauntl3t12/omg-idl"
-repository = "https://github.com/gauntl3t12/omg-idl"
+documentation = "https://docs.rs/omg-idl-code-gen"
+homepage = "https://github.com/gauntl3t12/omg-idl-code-gen"
+repository = "https://github.com/gauntl3t12/omg-idl-code-gen"
 
 [dependencies]
 serde = "1.0"

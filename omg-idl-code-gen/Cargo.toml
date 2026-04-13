@@ -8,9 +8,9 @@ description = "OMG IDL to Rust code generator library"
 license = "Apache-2.0"
 readme = "README.md"
 keywords = ["OMG", "DDS", "IDL", "generator", "RTPS"]
-documentation = "https://docs.rs/omg-idl"
-homepage = "https://github.com/gauntl3t12/omg-idl"
-repository = "https://github.com/gauntl3t12/omg-idl"
+documentation = "https://docs.rs/omg-idl-code-gen"
+homepage = "https://github.com/gauntl3t12/omg-idl-gen"
+repository = "https://github.com/gauntl3t12/omg-idl-gen"
 
 [dependencies]
 pest = "^2.8.5"

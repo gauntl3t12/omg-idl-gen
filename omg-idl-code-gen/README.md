@@ -12,7 +12,7 @@ Put this in your Cargo.toml:
 ```toml
 ## Cargo.toml file
 [dependencies]
-rtps-idl = "0.1"
+omg-idl-code-gen = "0.2"
 ```
 
 ## RTPS-IDL to Rust Mapping

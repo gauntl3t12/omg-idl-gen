@@ -59,3 +59,15 @@ fn example() {
 
     IdlParser::parse(Rule::specification, &data).unwrap_or_else(|e| panic!("{}", e));
 }
+
+#[test]
+fn object_keyword_boundary_still_parses() {
+    let input = r#"
+module DDS {
+    interface Foo {
+        Object get_obj();
+    };
+};
+"#;
+    IdlParser::parse(Rule::specification, input).unwrap_or_else(|e| panic!("{}", e));
+}

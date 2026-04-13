@@ -826,4 +826,3 @@ annotation_appl_params = {
 }
 // (217)
 annotation_appl_param = { identifier ~ "=" ~ const_expr }
-

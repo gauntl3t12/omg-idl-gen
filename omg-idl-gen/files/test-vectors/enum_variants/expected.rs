@@ -1,7 +1,7 @@
 use serde_derive::{Serialize, Deserialize};
 
 #[allow(dead_code, non_camel_case_types)]
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, PartialOrd, Eq, Ord)]
 pub enum Foo {
     VARIANT0,
     VARIANT1,
